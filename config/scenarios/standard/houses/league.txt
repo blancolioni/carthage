@@ -1,0 +1,4 @@
+capital = leagueheim
+color = 81
+category = league
+reveal = { byzantium-ii holy-terra leagueheim }

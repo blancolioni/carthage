@@ -1,0 +1,4 @@
+capital = chernobog
+color = { 226 53 39 }
+category = symbiot
+reveal = { chernobog daishan absolution stigmata }

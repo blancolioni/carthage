@@ -1,0 +1,2 @@
+color = 20
+category = imperial

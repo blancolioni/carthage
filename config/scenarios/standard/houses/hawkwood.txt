@@ -1,0 +1,4 @@
+color = 100
+capital = delphi
+category = noble
+reveal = { byzantium-ii holy-terra leagueheim }

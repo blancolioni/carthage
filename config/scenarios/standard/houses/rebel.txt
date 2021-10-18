@@ -1,0 +1,3 @@
+category = rebels
+color = 25
+reveal = { byzantium-ii holy-terra leagueheim }

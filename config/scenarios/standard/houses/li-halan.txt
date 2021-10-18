@@ -1,0 +1,4 @@
+color = 131
+capital = kish
+category = noble
+reveal = { byzantium-ii holy-terra leagueheim }
