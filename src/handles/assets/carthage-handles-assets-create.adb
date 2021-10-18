@@ -53,6 +53,25 @@ package body Carthage.Handles.Assets.Create is
                       (Ref));
             end if;
          end;
+
+         if Unit.Is_Cargo_Pod then
+            declare
+               Manager : constant Carthage.Handles.Managers.Manager_Handle :=
+                           Carthage.Handles.Managers.Get_Manager
+                             (Class  => Handles.Managers.Ground_Resources,
+                              House  => Owner.Reference,
+                              Planet =>
+                                Carthage.Handles.Stacks.Get (Stack).Planet);
+            begin
+               if Manager.Has_Element then
+                  Carthage.Handles.Managers.Add_Pending_Goal
+                    (To_Manager => Manager,
+                     Goal       =>
+                       Carthage.Goals.Assets.Add_Asset_To_Manager
+                         (Ref));
+               end if;
+            end;
+         end if;
       end if;
 
       return Get (Ref);

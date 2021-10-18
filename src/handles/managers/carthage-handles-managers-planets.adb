@@ -4,6 +4,8 @@ with Carthage.Money;
 with Carthage.Quantities;
 
 with Carthage.Handles.Managers.Assets;
+with Carthage.Handles.Managers.Resources;
+
 with Carthage.Handles.Cities;
 with Carthage.Handles.Houses.Updates;
 with Carthage.Handles.Managers.Cities;
@@ -14,8 +16,6 @@ with Carthage.Handles.Tiles;
 with Carthage.Goals.Transport;
 
 package body Carthage.Handles.Managers.Planets is
-
-   Log_Activity : constant Boolean := False;
 
    package City_Lists is
      new Ada.Containers.Doubly_Linked_Lists (City_Reference);
@@ -149,6 +149,10 @@ package body Carthage.Handles.Managers.Planets is
          Planet    => Planet,
          Transport => Handle);
 
+      Carthage.Handles.Managers.Resources.Create_Ground_Resource_Manager
+        (House  => House,
+         Planet => Planet);
+
       Handle.Log ("created with" & Rec.Owned_Cities.Length'Image
                   & " cities");
    end Create_Planet_Manager;
@@ -245,14 +249,12 @@ package body Carthage.Handles.Managers.Planets is
                            else Missing);
             begin
                if Taken > Zero then
-                  if Log_Activity then
-                     Manager.Log
-                       ("take "
-                        & Show (Taken)
-                        & " " & Resource.Local_Text
-                        & " from "
-                        & Palace.Description);
-                  end if;
+                  Manager.Log
+                    ("take "
+                     & Show (Taken)
+                     & " " & Resource.Local_Text
+                     & " from "
+                     & Palace.Description);
                   Available := Available + Taken;
                   Missing := Missing - Taken;
                   Palace.Remove (Resource, Taken);
@@ -276,29 +278,25 @@ package body Carthage.Handles.Managers.Planets is
             begin
                if Buy > Zero then
                   if Agora.Owner /= House then
-                     if Log_Activity then
-                        Manager.Log
-                          (Agora.Description
-                           & " sells "
-                           & Show (Buy)
-                           & " " & Resource.Local_Text
-                           & " for " & Show (Cost)
-                           & " (" & Show (Price) & " each");
-                     end if;
+                     Manager.Log
+                       (Agora.Description
+                        & " sells "
+                        & Show (Buy)
+                        & " " & Resource.Local_Text
+                        & " for " & Show (Cost)
+                        & " (" & Show (Price) & " each");
                      Carthage.Handles.Houses.Updates.Execute_Payment
                        (From   => House,
                         To     => Agora.Owner,
                         Amount => Cost);
                      Agora.After_Agora_Buys (Resource, Buy);
                   else
-                     if Log_Activity then
-                        Manager.Log
-                          ("take "
-                           & Carthage.Quantities.Show (Buy)
-                           & " " & Resource.Local_Text
-                           & " from "
-                           & Agora.Description);
-                     end if;
+                     Manager.Log
+                       ("take "
+                        & Carthage.Quantities.Show (Buy)
+                        & " " & Resource.Local_Text
+                        & " from "
+                        & Agora.Description);
                   end if;
 
                   Agora.Remove (Resource, Buy);
@@ -320,14 +318,13 @@ package body Carthage.Handles.Managers.Planets is
                   Resource => Get_Resource (Goal),
                   Quantity => Quantity);
 
-               if Log_Activity then
-                  Manager.Log
-                    ("transfer "
-                     & Carthage.Quantities.Show (Quantity)
-                     & " " & Get_Resource (Goal).Local_Text
-                     & " to "
-                     & Get_Resource_Destination (Goal).Short_Name);
-               end if;
+               Manager.Log
+                 ("transfer "
+                  & Carthage.Quantities.Show (Quantity)
+                  & " " & Get_Resource (Goal).Local_Text
+                  & " to "
+                  & Get_Resource_Destination (Goal).Short_Name);
+
             end if;
          end;
       end Update_Resource_Request;
@@ -338,9 +335,7 @@ package body Carthage.Handles.Managers.Planets is
         (Test    => Carthage.Goals.Transport.Is_Resource_Available_Goal'Access,
          Process => Save_Available_Resource'Access);
 
-      if Log_Activity then
-         Manager.Scan_Stock (Report_Resource'Access);
-      end if;
+      Manager.Scan_Stock (Report_Resource'Access);
 
       Manager.Update_Goals
         (Test     => Carthage.Goals.Transport.Is_Resource_Request_Goal'Access,
