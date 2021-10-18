@@ -181,6 +181,7 @@ package body Carthage.Handles.Tiles is
       Reference   : Tile_Reference;
    begin
       for T of Terrain loop
+         exit when T.Reference = Null_Terrain_Reference;
          Constant_Rec.Has_Terrain (T.Reference) := True;
       end loop;
 
