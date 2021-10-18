@@ -1,0 +1,34 @@
+al-malik,Al-Malik
+al-malik-full,House Al-Malik
+church,The Church
+church-full,The Universal Church
+decados,Decados
+decados-full,House Decados
+hawkwood,Hawkwood
+hawkwood-full,House Hawkwood
+hazat,Hazat
+hazat-full,The Hazat
+imperial,Imperial
+imperial-full,The Empire of the Known Universe
+league,The League
+league-full,The League
+league-adjective,League
+li-halan,Li Halan
+li-halan-full,House Li Halan
+rebel,Rebels
+rebel-full,The Rebels
+rebel-adjective,Rebel
+symbiot,Symbiots
+symbiot-full,The Symbiots
+vau,The Vau
+vau-full,The Vau
+spy,The Eye
+spy-full,The Imperial Eye
+spy-adjective,Imperial Eye
+fleet,The Fleet
+fleet-full,The Imperial Fleet
+fleet-adjective,Fleet
+stigmata,Stigmata
+stigmata-full,The Stigmata Garrison
+stigmata-adjective,Stigmata
+

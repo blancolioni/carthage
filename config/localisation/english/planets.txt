@@ -1,0 +1,40 @@
+planet-holy-terra,Holy Terra
+planet-byzantium-ii,Byzantium Secundus
+planet-chernobog,Chernobog
+planet-absolution,Absolution
+planet-daishan,Daishan
+planet-stigmata,Stigmata
+planet-nowhere,Nowhere
+planet-bannockburn,Bannockburn
+planet-vril-ya,Vril-Ya
+planet-manitou,Manitou
+planet-severus,Severus
+planet-de-moley,De Moley
+planet-cadavus,Cadavus
+planet-cadiz,Cadiz
+planet-kish,Kish
+planet-vau,Vau
+planet-apshai,Apshai
+planet-malignatius,Malignatius
+planet-aylon,Aylon
+planet-criticorum,Criticorum
+planet-gwynneth,Gwynneth
+planet-istakhr,Istakhr
+planet-icon,Icon
+planet-pandemonium,Pandemonium
+planet-rampart,Rampart
+planet-pyre,Pyre
+planet-pentateuch,Pentateuch
+planet-shaprut,Shaprut
+planet-leminkainen,Leminkainen
+planet-ravenna,Ravenna
+planet-delphi,Delphi
+planet-tethys,Tethys
+planet-artemis,Artemis
+planet-sutek,Sutek
+planet-madoc,Madoc
+planet-grail,Grail
+planet-aragon,Aragon
+planet-midian,Midian
+planet-leagueheim,Leagueheim
+planet-vera-cruz,Vera Cruz

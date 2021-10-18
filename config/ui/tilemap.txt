@@ -1,0 +1,86 @@
+feature-priority = { tree mountain hill desert }
+
+tree = {
+   all = 29
+   none = 30
+   default = 29
+   base = 74
+   2 = { sw nw n ne }
+   3 = { n nw }
+   4 = { n ne }
+   5 = { ne se }
+   6 = { s se }
+   7 = { s sw }
+   8 = { sw nw n }
+   9 = { nw n ne }
+   10 = { n ne se }
+   11 = { ne se s }
+   12 = { se s sw }
+   13 = { s sw nw }
+   14 = { sw nw n ne }
+   15 = { nw n ne se }
+   16 = { n ne se s }
+   17 = { ne se s sw }
+   18 = { se s sw nw }
+   19 = { s sw nw n }
+   20 = { sw nw n ne se }
+   21 = { nw n ne se s }
+   22 = { n ne se s sw }
+   23 = { ne se s sw nw }
+   24 = { se s sw nw n }
+   25 = { s sw nw n ne }
+   26 = { ne se nw sw }
+   27 = { nw n se s }
+   28 = { n ne sw s }
+}
+
+ocean = {
+   default = 50
+   base = 50
+}
+
+grass = {
+   base = 74
+   fade = 75
+}
+
+arid_grass = {
+   base = 81
+}
+
+mountain = {
+   default = 31
+   base = 125
+}
+
+hill = {
+   default = 132
+   base = 74
+}
+
+desert = {
+   default = 88
+   base = 88
+}
+
+ice = {
+   default = 125
+   base = 125
+}
+
+tundra = {
+   default = 118
+   base = 118
+}
+
+
+
+road = {
+   any = 67
+   nw = 68
+   s = 69
+   se = 70
+   n = 71
+   sw = 72
+   ne = 73
+}

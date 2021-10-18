@@ -1,0 +1,13 @@
+resource-biochems,biochemicals
+resource-chemicals,chemicals
+resource-ceramsteel,ceramsteel
+resource-electronics,electronics
+resource-energy,energy
+resource-exotica,exotica
+resource-food,food
+resource-gems,gems
+resource-metal,metal
+resource-monopols,monopoles
+resource-singularities,singularities
+resource-trace,trace elements
+resource-wetware,wetware

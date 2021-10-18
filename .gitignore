@@ -1,0 +1,27 @@
+syntax: glob
+build/*
+carthage.gpr
+carthage.log
+config/eofs.txt
+src/driver/carthage-paths.ads
+src/driver/carthage-options.ad[bs]
+config/cities
+config/technology
+config/units
+config/terrain/
+*.orig
+./images/*.bmp
+src/managers-v1/*
+eofs/*
+[alias] diff = diff --ignore-space-change
+config/resources.txt
+config/targets.txt
+options.txt
+terrain-config.txt
+src/carthage-paths.ads
+gprof.txt
+gmon.out
+.carthage-options
+carthage-loc.xml
+config/terrain-cost.txt
+config/ui/palette.txt

@@ -1,0 +1,20 @@
+farm = {
+   fertile = { food = 20 }
+   exotica = { exotica = 10 }
+}
+
+mine = {
+   trace = { trace = 20 }
+   gems = { gems = 5 }
+   metal = { metal = 20 }
+}
+
+arborium = {
+   exotica = { exotica = 10 }
+   fertile = { food = 20 }
+}
+
+well = {
+   energy = { energy = 20 }
+}   
+   

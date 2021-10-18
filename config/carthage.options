@@ -1,0 +1,19 @@
+package Carthage.Options is
+
+   Clear_Import_Cache     : Boolean;
+   Create                 : Boolean;
+   Gtk_UI                 : Boolean;
+   House                  : String;
+   Trace_Planet_Import    : Boolean;
+   Trace_Unit_Import      : Boolean;
+   Update                 : Boolean;
+   Update_Count           : Natural := 1;
+   Wizard_Mode            : Boolean;
+   Show_Hex_Coordinates   : Boolean;
+   Show_Cubic_Coordinates : Boolean;
+   Show_Move_Cost         : Boolean;
+   Combat_Test            : Boolean;
+   Report_State           : Boolean;
+   Task_Count             : Natural := 1;
+
+end Carthage.Options;

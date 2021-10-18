@@ -1,0 +1,8 @@
+left-toolbar = { 0 64 172 -96 }
+top-toolbar = { 16 0 -16 96 }
+bottom-toolbar = { 200 -64 1032 0 }
+mini-map = { 0 64 172 192 }
+status-box = { 0 280 172 380 }
+main-map = { 196 64 -16 -96 }
+selected-stack-layout = { 0 400 172 600 }
+sidebar-icon-size = 32

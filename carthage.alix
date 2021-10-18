@@ -1,0 +1,58 @@
+project_name = Carthage
+source_dir = src
+source_dir = src/base
+source_dir = src/combat
+source_dir = src/configure
+source_dir = src/driver
+source_dir = src/handles
+source_dir = src/handles/assets
+source_dir = src/handles/cities
+source_dir = src/handles/galaxy
+source_dir = src/handles/goals
+source_dir = src/handles/houses
+source_dir = src/handles/managers
+source_dir = src/handles/planets
+source_dir = src/handles/resources
+source_dir = src/handles/stacks
+source_dir = src/handles/stocks
+source_dir = src/handles/structures
+source_dir = src/handles/technology
+source_dir = src/handles/terrain
+source_dir = src/handles/tiles
+source_dir = src/handles/units
+source_dir = src/handles/worlds
+source_dir = src/hexes
+source_dir = src/game
+source_dir = src/goals
+source_dir = src/logging
+source_dir = src/state
+source_dir = src/ui
+source_dir = src/ui/gtk
+source_dir = src/ui/models
+#source_dir = src/updates
+depend = { project = Tropos version = any }
+depend = { project = Wlib version = any }
+depend = { project = Lith version = any }
+depend = { project = Lui version = any }
+depend = { project = ../reiko/reiko external = yes }
+depend = { project = ../tarana/tarana external = yes }
+depend = { project = gtkada external = yes }
+main_unit = carthage-driver
+exec_name = carthage
+config_dir = config
+path_unit = { unit = Carthage.Paths path = src/carthage-paths.ads }
+when (target=posix) = {
+    linker_option = "-lpixman-1"
+    linker_option = "-lgtk-3"
+    linker_option = "-lgdk-3"
+    linker_option = "-lpangocairo-1.0"
+    linker_option = "-lpango-1.0"
+    linker_option = "-lharfbuzz"
+    linker_option = "-latk-1.0"
+    linker_option = "-lcairo-gobject"
+    linker_option = "-lcairo"
+    linker_option = "-lgdk_pixbuf-2.0"
+    linker_option = "-lgio-2.0"
+    linker_option = "-lgobject-2.0"
+    linker_option = "-lglib-2.0"
+}

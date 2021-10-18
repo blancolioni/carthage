@@ -1,0 +1,24 @@
+index = 1
+
+terrain = {
+   ocean = 0.05
+   grass = 0.3
+   tree = 0.3
+   hill = 0.2
+   mountain = 0.15
+}
+
+temperature = 35
+ocean = 30%
+
+base-land = grass
+
+climate-terrain = {
+   grass = { humidity = { 10 100 } temperature = { -5 25 } }
+   arid_grass = { humidity = { 5 10 } temperature = { 10 35 } }
+   desert = { humidity = { 0 5 } }
+   tundra = { temperature = { -30 -5 } }
+   ice = { temperature = { -100 -30 } }
+}
+
+smooth = 3
