@@ -102,6 +102,11 @@ package body Carthage.Handles.Units is
       return Positive
    is (Get (This).Weapons (Weapon).Strength);
 
+   function Is_Cargo_Pod
+     (This : Unit_Handle)
+      return Boolean
+   is (This.Tag = "cargo");
+
    function Exists (Tag : String) return Boolean
    is (Unit_Map.Contains (Tag));
 

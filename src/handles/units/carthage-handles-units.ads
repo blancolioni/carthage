@@ -40,6 +40,10 @@ package Carthage.Handles.Units is
       return Boolean
    is (This.Category in Ground_Category);
 
+   function Is_Cargo_Pod
+     (This : Unit_Handle)
+      return Boolean;
+
    function Movement
      (This : Unit_Handle)
       return Natural;
