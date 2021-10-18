@@ -27,3 +27,4 @@ config/terrain-cost.txt
 config/ui/palette.txt
 carthage-create.log
 games/*
+src/.clang-format
