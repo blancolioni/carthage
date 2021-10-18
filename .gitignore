@@ -26,3 +26,4 @@ carthage-loc.xml
 config/terrain-cost.txt
 config/ui/palette.txt
 carthage-create.log
+games/*
