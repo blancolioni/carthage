@@ -34,8 +34,8 @@ depend = { project = Tropos version = any }
 depend = { project = Wlib version = any }
 depend = { project = Lith version = any }
 depend = { project = Lui version = any }
-depend = { project = ../reiko/reiko external = yes }
-depend = { project = ../tarana/tarana external = yes }
+depend = { project = reiko version = any }
+depend = { project = tarana version = any }
 depend = { project = gtkada external = yes }
 main_unit = carthage-driver
 exec_name = carthage
