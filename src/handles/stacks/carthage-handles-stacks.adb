@@ -397,6 +397,23 @@ package body Carthage.Handles.Stacks is
          Cost     => Move_Cost'Access);
    end Find_Path;
 
+   ---------------------------
+   -- For_All_Ground_Stacks --
+   ---------------------------
+
+   procedure For_All_Ground_Stacks
+     (Process : not null access procedure (Stack : Stack_Handle))
+   is
+   begin
+      for Reference in 1 .. Stack_Vector.Last_Index loop
+         if Stack_Vector.Element (Reference).Active
+           and then not Stack_Vector.Element (Reference).Orbital
+         then
+            Process (Get (Reference));
+         end if;
+      end loop;
+   end For_All_Ground_Stacks;
+
    --------------------
    -- For_All_Stacks --
    --------------------
