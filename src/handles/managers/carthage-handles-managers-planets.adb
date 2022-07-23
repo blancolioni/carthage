@@ -127,8 +127,9 @@ package body Carthage.Handles.Managers.Planets is
 
    begin
       Rec.Initialize
-        (Class  => Ground_Transport,
-         House  => House);
+        (Class     => Ground,
+         Authority => Planet_Management,
+         House     => House);
 
       Rec.Planet := Planet.Reference;
       Rec.Owned_Cities := Owned_Cities;
@@ -140,21 +141,22 @@ package body Carthage.Handles.Managers.Planets is
          Carthage.Handles.Managers.Cities.Create_City_Manager
            (House            => House,
             City             =>
-              Carthage.Handles.Cities.Get (City),
-            Resource_Manager => Handle);
+              Carthage.Handles.Cities.Get (City));
       end loop;
 
       Carthage.Handles.Managers.Assets.Create_Ground_Asset_Manager
         (House     => House,
-         Planet    => Planet,
-         Transport => Handle);
+         Planet    => Planet);
 
       Carthage.Handles.Managers.Resources.Create_Ground_Resource_Manager
         (House  => House,
          Planet => Planet);
 
-      Handle.Log ("created with" & Rec.Owned_Cities.Length'Image
-                  & " cities");
+      if not Rec.Owned_Cities.Is_Empty then
+         Handle.Log ("created with" & Rec.Owned_Cities.Length'Image
+                     & " cities");
+      end if;
+
    end Create_Planet_Manager;
 
    ------------------

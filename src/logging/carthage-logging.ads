@@ -14,6 +14,13 @@ package Carthage.Logging is
    procedure Log (Level   : Log_Level;
                   Message : String);
 
+   procedure Log (Category : String;
+                  Message  : String);
+
+   procedure Log (Level    : Log_Level;
+                  Category : String;
+                  Message  : String);
+
    procedure Log_Exception
      (Message : String;
       E       : Ada.Exceptions.Exception_Occurrence);

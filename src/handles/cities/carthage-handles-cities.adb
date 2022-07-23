@@ -1,7 +1,11 @@
+with Ada.Containers.Vectors;
+
 with Carthage.Handles.Planets;
 with Carthage.Handles.Structures;
 with Carthage.Handles.Tiles;
 with Carthage.Handles.Vectors;
+
+with Carthage.Messages.Resources;
 
 package body Carthage.Handles.Cities is
 
@@ -15,6 +19,17 @@ package body Carthage.Handles.Cities is
      (Handle : City_Handle)
       return City_Vectors.Constant_Reference_Type
    is (City_Vector (Handle.Reference));
+
+   package Reference_Lists is
+     new Ada.Containers.Doubly_Linked_Lists (City_Reference);
+
+   Harvester_List : Reference_Lists.List;
+
+   package Production_Vectors is
+     new Ada.Containers.Vectors
+       (Real_Resource_Reference, Reference_Lists.List, Reference_Lists."=");
+
+   Production_Vector : Production_Vectors.Vector;
 
    overriding function Identifier
      (City : City_Handle)
@@ -57,6 +72,11 @@ package body Carthage.Handles.Cities is
      (City : City_Handle)
       return Planet_Reference
    is (Get (City).Planet);
+
+   function Agora
+     (City : City_Handle)
+      return City_Handle
+   is (Get (Get (City).Agora));
 
    function Loyalty
      (City : City_Handle)
@@ -235,6 +255,9 @@ package body Carthage.Handles.Cities is
       Reference : City_Reference;
    begin
       City_Vector.Append (Rec, Reference);
+      if Carthage.Handles.Structures.Get (Rec.Structure).Is_Harvester then
+         Harvester_List.Append (Reference);
+      end if;
       return Reference;
    end Create_City;
 
@@ -264,10 +287,23 @@ package body Carthage.Handles.Cities is
       Quantity  : constant Carthage.Quantities.Quantity_Type :=
                     Structure.Execute_Production
                       (Stock      => This,
+                       House      => This.Owner.Reference,
+                       Tile       => This.Tile,
                        Efficiency => Efficiency,
                        Factor     => Factor);
    begin
       This.Add (Resource, Quantity);
+      declare
+         Message : constant Carthage.Messages.Message_Interface'Class :=
+                     Carthage.Messages.Resources.Available
+                       (House    => This.Owner,
+                        Tile     =>
+                          Carthage.Handles.Tiles.Get (This.Tile),
+                        Resource => Resource,
+                        Quantity => Quantity);
+      begin
+         Message.Send;
+      end;
    end Execute_Production;
 
    --------------------
@@ -283,6 +319,49 @@ package body Carthage.Handles.Cities is
       end loop;
    end For_All_Cities;
 
+   -----------------------------------
+   -- For_All_Cities_With_Structure --
+   -----------------------------------
+
+   procedure For_All_Cities_With_Structure
+     (Structure : Structure_Reference;
+      Process   : not null access procedure (This : City_Handle))
+   is
+   begin
+      for Reference in 1 .. City_Vector.Last_Index loop
+         if Get (Reference).Structure = Structure then
+            Process (Get (Reference));
+         end if;
+      end loop;
+   end For_All_Cities_With_Structure;
+
+   ------------------------
+   -- For_All_Harvesters --
+   ------------------------
+
+   procedure For_All_Harvesters
+     (Process : not null access procedure (This : City_Handle))
+   is
+   begin
+      for Reference of Harvester_List loop
+         Process (Get (Reference));
+      end loop;
+   end For_All_Harvesters;
+
+   -----------------------
+   -- For_All_Producers --
+   -----------------------
+
+   procedure For_All_Producers
+     (Resource  : Carthage.Handles.Resources.Resource_Handle;
+      Process   : not null access procedure (This : City_Handle))
+   is
+   begin
+      for Reference of Production_Vector (Resource.Reference) loop
+         Process (Get (Reference));
+      end loop;
+   end For_All_Producers;
+
    ----------
    -- Load --
    ----------
@@ -290,8 +369,40 @@ package body Carthage.Handles.Cities is
    procedure Load
      (Stream : not null access Ada.Streams.Root_Stream_Type'Class)
    is
+      procedure Add_Empty_List
+        (For_Resource : Carthage.Handles.Resources.Resource_Handle);
+
+      --------------------
+      -- Add_Empty_List --
+      --------------------
+
+      procedure Add_Empty_List
+        (For_Resource : Carthage.Handles.Resources.Resource_Handle)
+      is
+         pragma Unreferenced (For_Resource);
+      begin
+         Production_Vector.Append (Reference_Lists.Empty_List);
+      end Add_Empty_List;
+
    begin
       City_Vector.Read (Stream);
+
+      Carthage.Handles.Resources.For_All_Resources
+        (Add_Empty_List'Access);
+
+      for Reference in 1 .. City_Vector.Last_Index loop
+         declare
+            Structure : constant Carthage.Handles.Structures.Structure_Handle
+              := Carthage.Handles.Structures.Get (Get (Reference).Structure);
+         begin
+            if Structure.Is_Harvester then
+               Harvester_List.Append (Reference);
+            elsif Structure.Production_Output.Has_Element then
+               Production_Vector (Structure.Production_Output.Reference)
+                 .Append (Reference);
+            end if;
+         end;
+      end loop;
    end Load;
 
    ----------
@@ -321,6 +432,7 @@ package body Carthage.Handles.Cities is
       Tile : constant Carthage.Handles.Tiles.Tile_Handle :=
                Carthage.Handles.Tiles.Get (This.Tile);
    begin
+      This.Log ("looking");
       Planet.Scan_Neighbours_Within
         (Start    => Tile.Position,
          Distance => Spot,
@@ -378,6 +490,21 @@ package body Carthage.Handles.Cities is
    begin
       City_Vector.Write (Stream);
    end Save;
+
+   ------------------------
+   -- Scan_Harvest_Tiles --
+   ------------------------
+
+   procedure Scan_Harvest_Tiles
+     (This : City_Handle;
+      Process   : not null access
+        procedure (Tile : Tile_Reference))
+   is
+   begin
+      for Tile of Get (This).Harvest_Tiles loop
+         Process (Tile);
+      end loop;
+   end Scan_Harvest_Tiles;
 
    -------------
    -- Seen_By --

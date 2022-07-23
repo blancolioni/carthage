@@ -40,9 +40,11 @@ package body Carthage.Handles.Assets.Create is
          declare
             Manager : constant Carthage.Handles.Managers.Manager_Handle :=
                         Carthage.Handles.Managers.Get_Manager
-                          (Class  => Carthage.Handles.Managers.Ground_Assets,
-                           House  => Owner.Reference,
-                           Planet =>
+                          (Class     => Carthage.Handles.Managers.Ground,
+                           Authority =>
+                             Carthage.Handles.Managers.Asset_Management,
+                           House     => Owner.Reference,
+                           Planet    =>
                              Carthage.Handles.Stacks.Get (Stack).Planet);
          begin
             if Manager.Has_Element then
@@ -58,9 +60,11 @@ package body Carthage.Handles.Assets.Create is
             declare
                Manager : constant Carthage.Handles.Managers.Manager_Handle :=
                            Carthage.Handles.Managers.Get_Manager
-                             (Class  => Handles.Managers.Ground_Resources,
-                              House  => Owner.Reference,
-                              Planet =>
+                             (Class     => Handles.Managers.Ground,
+                              Authority =>
+                                Handles.Managers.Resource_Management,
+                              House     => Owner.Reference,
+                              Planet    =>
                                 Carthage.Handles.Stacks.Get (Stack).Planet);
             begin
                if Manager.Has_Element then

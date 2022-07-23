@@ -1,8 +1,5 @@
 with WL.Random;
 
-with Reiko.Updates;
-
-with Carthage.Calendar;
 with Carthage.Logging;
 
 with Carthage.Handles.Units;
@@ -33,19 +30,6 @@ package body Carthage.Combat is
 
    procedure Resolve
      (Attack : in out Attack_Record);
-
-   type Battle_Update is
-     new Reiko.Root_Update_Type with
-      record
-         Battle_Index : Positive;
-         Weapon       : Carthage.Handles.Weapon_Category;
-      end record;
-
-   overriding function Name (Battle : Battle_Update) return String
-   is (Battle.Weapon'Image);
-
-   overriding procedure Execute
-     (Update : Battle_Update);
 
    ---------------
    -- Add_Stack --
@@ -245,83 +229,6 @@ package body Carthage.Combat is
       Battle.Defenders.Clear;
    end Create;
 
-   overriding procedure Execute
-     (Update : Battle_Update)
-   is
-      use Carthage.Handles;
-      Battle : Battle_Record renames Current_Battles (Update.Battle_Index);
-      Weapon : Weapon_Category := Update.Weapon;
-   begin
-
-      if not Battle.Active then
-         return;
-      end if;
-
-      Attacker (Battle).Log ("attacking " & Defender (Battle).Short_Name);
-
-      loop
-
-         Attacker (Battle).Log ("phase: " & Weapon'Img);
-
-         declare
-            Round : constant Attack_Record_Array :=
-                      Carthage.Combat.Attack_Round (Battle, Weapon);
-         begin
-
-            for Attack of Round loop
-               Attacker (Battle).Log (Image (Attack));
-            end loop;
-
-            exit when Round'Length > 0;
-
-            if Weapon = Weapon_Category'Last then
-               Weapon := Weapon_Category'First;
-            else
-               Weapon := Weapon_Category'Succ (Weapon);
-            end if;
-
-            if Weapon = Update.Weapon then
-               Battle.Active := False;
-               exit;
-            end if;
-         end;
-      end loop;
-
-      for Stack of Battle.Stacks loop
-         for I in 1 .. Stack.Asset_Count loop
-            declare
-               Asset : constant Carthage.Handles.Assets.Asset_Handle :=
-                         Carthage.Handles.Assets.Get (Stack.Asset (I));
-            begin
-               if not Asset.Alive then
-                  Asset.Log ("destroyed");
-               end if;
-            end;
-         end loop;
-      end loop;
-
-      for Stack of Battle.Stacks loop
-         Stack.Remove_Dead_Assets;
-      end loop;
-
-      if Battle.Active then
-         declare
-            New_Update : Battle_Update := Update;
-         begin
-            if Weapon = Weapon_Category'Last then
-               Weapon := Weapon_Category'First;
-            else
-               Weapon := Weapon_Category'Succ (Weapon);
-            end if;
-
-            New_Update.Weapon := Weapon;
-            Reiko.Updates.Add_Update
-              (New_Update, Reiko.Reiko_Duration (Carthage.Calendar.Days (1)));
-         end;
-      end if;
-
-   end Execute;
-
    -----------
    -- Image --
    -----------
@@ -361,14 +268,6 @@ package body Carthage.Combat is
       Add_Stack (Battle, Attacker);
       Add_Stack (Battle, Defender);
       Current_Battles.Append (Battle);
-      Reiko.Updates.Add_Update
-        (Update       => Battle_Update'
-           (Reiko.Root_Update_Type with
-            Battle_Index => Current_Battles.Last_Index,
-            Weapon       => Carthage.Handles.Weapon_Category'First),
-         Update_Delay =>
-           Reiko.Reiko_Duration
-             (Carthage.Calendar.Days (1)));
    end New_Battle;
 
    -------------
@@ -467,5 +366,65 @@ package body Carthage.Combat is
          end if;
       end loop;
    end Scan_Battles;
+
+   -------------------
+   -- Update_Battle --
+   -------------------
+
+   procedure Update_Battle (Battle : in out Battle_Record) is
+      use Carthage.Handles;
+      Weapon : constant Weapon_Category := Battle.Next_Weapon;
+   begin
+
+      if not Battle.Active then
+         return;
+      end if;
+
+      Attacker (Battle).Log ("attacking " & Defender (Battle).Short_Name);
+
+      loop
+
+         Attacker (Battle).Log ("phase: " & Weapon'Img);
+
+         declare
+            Round : constant Attack_Record_Array :=
+                      Carthage.Combat.Attack_Round (Battle, Weapon);
+         begin
+
+            for Attack of Round loop
+               Attacker (Battle).Log (Image (Attack));
+            end loop;
+
+            exit when Round'Length > 0;
+
+         end;
+      end loop;
+
+      for Stack of Battle.Stacks loop
+         for I in 1 .. Stack.Asset_Count loop
+            declare
+               Asset : constant Carthage.Handles.Assets.Asset_Handle :=
+                         Carthage.Handles.Assets.Get (Stack.Asset (I));
+            begin
+               if not Asset.Alive then
+                  Asset.Log ("destroyed");
+               end if;
+            end;
+         end loop;
+      end loop;
+
+      for Stack of Battle.Stacks loop
+         Stack.Remove_Dead_Assets;
+      end loop;
+
+      if Battle.Active then
+         if Battle.Next_Weapon = Weapon_Category'Last then
+            Battle.Next_Weapon := Weapon_Category'First;
+         else
+            Battle.Next_Weapon := Weapon_Category'Succ (Battle.Next_Weapon);
+         end if;
+      end if;
+
+   end Update_Battle;
 
 end Carthage.Combat;

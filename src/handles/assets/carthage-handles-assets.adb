@@ -48,6 +48,9 @@ package body Carthage.Handles.Assets is
       return Stack_Reference
    is (Get (Asset).Stack);
 
+   function Owner (This : Asset_Handle) return House_Reference
+   is (Get (This).Owner);
+
    function Movement
      (This : Asset_Handle)
       return Natural
@@ -286,6 +289,14 @@ package body Carthage.Handles.Assets is
         & Carthage.Handles.Houses.Get (Get (Asset).Owner).Tag
         & "-"
         & Asset.Unit.Tag
+        & (if Asset.Unit.Is_Cargo_Pod
+           and then Asset.Resource_Cargo.Has_Element
+           then "-["
+           & Carthage.Quantities.Show (Asset.Resource_Quantity)
+           & " "
+           & Asset.Resource_Cargo.Tag
+           & "]"
+           else "")
         & "-["
         & Planet.Local_Text
         & "]"

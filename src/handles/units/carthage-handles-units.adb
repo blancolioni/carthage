@@ -137,8 +137,6 @@ package body Carthage.Handles.Units is
       if Ada.Strings.Fixed.Index (-Rec.Tag, "cargo") > 0 then
          Cargo_Pod_Handle := Get (Unit_Vector.Last_Index);
       end if;
-      Get (Unit_Vector.Last_Index).Log
-        ("created with index" & Rec.Index'Image);
    end Create;
 
    ------------------

@@ -477,11 +477,42 @@ package body Carthage.Handles.Planets is
       return Natural
    is
       pragma Unreferenced (This);
+      DX : constant Natural :=
+             Natural'Min (abs (From.X - To.X),
+                          abs (Planet_Width - Tile_X'Max (From.X, To.X)
+                            + Tile_X'Min (From.X, To.X)));
    begin
-      return abs (Integer (From.X - To.X))
-        + abs (Integer (From.Y - To.Y));
+      return DX + abs (Integer (From.Y - To.Y));
 --        return Tile_Graphs.Vertex_Count
 --          (Surface_Graph.Shortest_Path (Index_Of (From), Index_Of (To)));
+   end Hex_Distance;
+
+   ------------------
+   -- Hex_Distance --
+   ------------------
+
+   function Hex_Distance
+     (This     : Planet_Handle;
+      From, To : Tile_Reference)
+      return Natural
+   is
+   begin
+      return This.Hex_Distance
+        (Carthage.Handles.Tiles.Get (From).Position,
+         Carthage.Handles.Tiles.Get (To).Position);
+   end Hex_Distance;
+
+   ------------------
+   -- Hex_Distance --
+   ------------------
+
+   function Hex_Distance
+     (This     : Planet_Handle;
+      From, To : Carthage.Handles.Tiles.Tile_Handle)
+      return Natural
+   is
+   begin
+      return This.Hex_Distance (From.Position, To.Position);
    end Hex_Distance;
 
    ---------------------

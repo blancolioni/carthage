@@ -45,7 +45,7 @@ package body Carthage.Handles.Houses.Configure is
          Treaties      => (others => Neutral),
          Known_Planets => <>);
 
-      House : constant House_Reference := Create (Rec);
+         House : constant House_Reference := Create (Rec);
 
    begin
 
@@ -71,7 +71,21 @@ package body Carthage.Handles.Houses.Configure is
                             & Capital_Tag
                             & " for house " & Config.Config_Name))
                        else Carthage.Handles.Planets.Empty_Handle);
+
+      procedure Set_Known (Planet : Carthage.Handles.Planets.Planet_Handle);
+
+      ---------------
+      -- Set_Known --
+      ---------------
+
+      procedure Set_Known (Planet : Carthage.Handles.Planets.Planet_Handle) is
+      begin
+         House.Add_Known_Planet (Planet.Reference);
+      end Set_Known;
+
    begin
+      Carthage.Handles.Planets.For_All_Planets (Set_Known'Access);
+
       if Capital.Has_Element then
          Capital.Set_Owner (House.Reference);
          House.Set_Initial_Capital (Capital.Reference);

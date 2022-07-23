@@ -88,6 +88,8 @@ package Carthage.Combat is
       Weapon : Carthage.Handles.Weapon_Category)
       return Attack_Record_Array;
 
+   procedure Update_Battle (Battle : in out Battle_Record);
+
    procedure Scan_Battles
      (Process : not null access
         procedure (Battle : in out Battle_Record));
@@ -176,14 +178,15 @@ private
 
    type Battle_Record is
       record
-         Active    : Boolean;
-         Attacker  : Carthage.Handles.Houses.House_Handle;
-         Defender  : Carthage.Handles.Houses.House_Handle;
-         Planet    : Carthage.Handles.Planets.Planet_Handle;
-         Tile      : Carthage.Handles.Tiles.Tile_Handle;
-         Attackers : Asset_Vectors.Vector;
-         Defenders : Asset_Vectors.Vector;
-         Stacks    : Stack_Vectors.Vector;
+         Active      : Boolean;
+         Attacker    : Carthage.Handles.Houses.House_Handle;
+         Defender    : Carthage.Handles.Houses.House_Handle;
+         Planet      : Carthage.Handles.Planets.Planet_Handle;
+         Tile        : Carthage.Handles.Tiles.Tile_Handle;
+         Attackers   : Asset_Vectors.Vector;
+         Defenders   : Asset_Vectors.Vector;
+         Stacks      : Stack_Vectors.Vector;
+         Next_Weapon : Carthage.Handles.Weapon_Category;
       end record;
 
    function Attacker

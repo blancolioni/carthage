@@ -1,4 +1,5 @@
 private with Ada.Containers.Indefinite_Doubly_Linked_Lists;
+private with Ada.Containers.Doubly_Linked_Lists;
 
 with Ada.Streams;
 
@@ -49,6 +50,10 @@ package Carthage.Handles.Cities is
    function Structure
      (City : City_Handle)
       return Structure_Reference;
+
+   function Agora
+     (City : City_Handle)
+      return City_Handle;
 
    function Loyalty
      (City : City_Handle)
@@ -139,10 +144,17 @@ package Carthage.Handles.Cities is
    procedure For_All_Cities
      (Process : not null access procedure (This : City_Handle));
 
-   --  procedure Scan_Cities
-   --    (Structure : Carthage.Handles.Structures.Structure_Class;
-   --     Process   : not null access procedure (City : City_Class));
-   --
+   procedure For_All_Cities_With_Structure
+     (Structure : Structure_Reference;
+      Process   : not null access procedure (This : City_Handle));
+
+   procedure For_All_Producers
+     (Resource  : Carthage.Handles.Resources.Resource_Handle;
+      Process   : not null access procedure (This : City_Handle));
+
+   procedure For_All_Harvesters
+     (Process : not null access procedure (This : City_Handle));
+
    --  procedure Scan_Cities
    --    (Owner   : Carthage.Handles.Houses.House_Handle;
    --     Process : not null access procedure (City : City_Class));
@@ -174,6 +186,11 @@ private
    overriding function Short_Name
      (City : City_Handle)
       return String;
+
+   procedure Scan_Harvest_Tiles
+     (This      : City_Handle;
+      Process   : not null access
+        procedure (Tile : Tile_Reference));
 
    function Reference
      (Handle : City_Handle)
@@ -210,21 +227,25 @@ private
    type Agora_Price_Array is
      array (Real_Resource_Reference) of Agora_Resource_Record;
 
+   package Harvest_Tile_Lists is
+     new Ada.Containers.Doubly_Linked_Lists (Tile_Reference);
+
    type City_Record is
       record
-         Identifier : Object_Identifier;
-         Planet     : Planet_Reference;
-         Tile       : Tile_Reference;
-         Structure  : Structure_Reference;
-         Owner      : House_Reference;
-         Health     : Health_Type;
-         Loyalty    : Loyalty_Type;
-         Agora      : City_Reference;
-         Progress   : Unit_Real;
-         Orders     : City_Order_Lists.List;
-         Seen_By    : Set_Of_Houses;
-         Prices     : Agora_Price_Array;
-         Transfer   : Carthage.Handles.Resources.Resource_Stock;
+         Identifier    : Object_Identifier;
+         Planet        : Planet_Reference;
+         Tile          : Tile_Reference;
+         Structure     : Structure_Reference;
+         Owner         : House_Reference;
+         Health        : Health_Type;
+         Loyalty       : Loyalty_Type;
+         Agora         : City_Reference;
+         Progress      : Unit_Real;
+         Orders        : City_Order_Lists.List;
+         Seen_By       : Set_Of_Houses;
+         Prices        : Agora_Price_Array;
+         Transfer      : Carthage.Handles.Resources.Resource_Stock;
+         Harvest_Tiles : Harvest_Tile_Lists.List;
       end record;
 
    function Create_City (Rec : City_Record) return City_Reference;

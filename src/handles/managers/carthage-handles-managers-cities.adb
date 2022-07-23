@@ -9,7 +9,7 @@ with Carthage.Handles.Tiles;
 
 package body Carthage.Handles.Managers.Cities is
 
-   Log_Production : constant Boolean := False;
+   Log_Production : constant Boolean := True;
 
    type City_Manager_Record is
      new Root_Manager_Record with
@@ -17,7 +17,6 @@ package body Carthage.Handles.Managers.Cities is
          City      : City_Reference;
          Structure : Structure_Reference;
          Planet    : Planet_Reference;
-         Transport : Manager_Reference;
          Tiles     : Carthage.Handles.Planets.Surface_Tiles;
          Requests  : Carthage.Handles.Resources.Resource_Stock;
       end record;
@@ -55,22 +54,21 @@ package body Carthage.Handles.Managers.Cities is
 
    procedure Create_City_Manager
      (House            : Carthage.Handles.Houses.House_Handle;
-      City             : Carthage.Handles.Cities.City_Handle;
-      Resource_Manager : Manager_Handle)
+      City             : Carthage.Handles.Cities.City_Handle)
    is
       Rec : City_Manager_Record;
       Structure : constant Carthage.Handles.Structures.Structure_Handle :=
         Carthage.Handles.Structures.Get (City.Structure);
    begin
       Rec.Initialize
-        (Class        => Production,
+        (Class        => Ground,
+         Authority    => Production_Management,
          House        => House,
          First_Event  => Carthage.Calendar.Days (7),
          Random_Start => True);
       Rec.City := City.Reference;
       Rec.Structure := City.Structure;
       Rec.Planet := City.Planet;
-      Rec.Transport := Resource_Manager.Reference;
 
       if Structure.Is_Harvester then
          Carthage.Handles.Planets.Get (Rec.Planet).Get_Tiles
@@ -105,7 +103,6 @@ package body Carthage.Handles.Managers.Cities is
       Structure : constant Structure_Handle := Get (Manager.Structure);
       Tiles     : Surface_Tiles renames Manager.Tiles;
       Harvest   : Carthage.Handles.Resources.Resource_Stock;
-      Transport : constant Manager_Handle := Get (Manager.Transport);
    begin
 
       for I in 1 .. Tile_Count (Tiles) loop
@@ -152,9 +149,13 @@ package body Carthage.Handles.Managers.Cities is
             Quantity : Carthage.Quantities.Quantity_Type)
          is
          begin
-            Add_Pending_Goal
-              (To_Manager => Transport,
-               Goal       =>
+            Get_Manager
+              (Class     => Ground,
+               Authority => Resource_Management,
+               House     => City.Owner.Reference,
+               Planet    => City.Planet)
+              .Add_Pending_Goal
+              (Goal       =>
                  Carthage.Goals.Transport.Resource_Available
                    (Source   => Carthage.Handles.Tiles.Get (City.Tile),
                     Resource => Resource,
@@ -182,7 +183,11 @@ package body Carthage.Handles.Managers.Cities is
       Inputs  : constant Production_Array :=
                   Structure.Production_Inputs;
       Transport : constant Manager_Handle :=
-                    Get (Manager.Transport);
+                    Get_Manager
+                      (Class     => Ground,
+                       Authority => Resource_Management,
+                       House     => City.Owner.Reference,
+                       Planet    => City.Planet);
    begin
       for Item of Inputs loop
          declare
@@ -222,12 +227,16 @@ package body Carthage.Handles.Managers.Cities is
          Quantity : constant Quantity_Type :=
                       Structure.Execute_Production
                         (Stock      => City,
+                         House      => City.Owner.Reference,
+                         Tile       => City.Tile,
                          Efficiency =>
                            Real (City.Loyalty) / 100.0
                          * Real (City.Health) / 100.0,
                          Factor     => 0.1);
       begin
-         City.Add (Structure.Production_Output, Quantity);
+         if Quantity > Zero then
+            City.Add (Structure.Production_Output, Quantity);
+         end if;
       end;
 
    end Manage_Production;

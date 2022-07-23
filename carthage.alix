@@ -25,16 +25,19 @@ source_dir = src/hexes
 source_dir = src/game
 source_dir = src/goals
 source_dir = src/logging
+source_dir = src/managers
+source_dir = src/messages
 source_dir = src/state
 source_dir = src/ui
 source_dir = src/ui/gtk
 source_dir = src/ui/models
-#source_dir = src/updates
+source_dir = src/updates
 depend = { project = Tropos version = any }
 depend = { project = Wlib version = any }
 depend = { project = Lith version = any }
-depend = { project = Lui version = any }
-depend = { project = reiko version = any }
+depend = { project = nazar version = any }
+depend = { project = nazargtk version = any }
+#depend = { project = reiko version = any }
 depend = { project = tarana version = any }
 depend = { project = gtkada external = yes }
 main_unit = carthage-driver

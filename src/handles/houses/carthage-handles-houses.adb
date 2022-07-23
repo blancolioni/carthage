@@ -76,6 +76,29 @@ package body Carthage.Handles.Houses is
 
    Manager_Map : Manager_Maps.Map;
 
+   ----------------------
+   -- Add_Known_Planet --
+   ----------------------
+
+   procedure Add_Known_Planet
+     (This   : House_Handle;
+      Planet : Planet_Reference)
+   is
+      procedure Update (Rec : in out House_Record);
+
+      ------------
+      -- Update --
+      ------------
+
+      procedure Update (Rec : in out House_Record) is
+      begin
+         Rec.Known_Planets.Append (Planet);
+      end Update;
+
+   begin
+      House_Vector.Update (This.Reference, Update'Access);
+   end Add_Known_Planet;
+
    ------------
    -- Create --
    ------------

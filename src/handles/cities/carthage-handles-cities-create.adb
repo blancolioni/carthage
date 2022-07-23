@@ -14,19 +14,20 @@ package body Carthage.Handles.Cities.Create is
       return Carthage.Handles.Cities.City_Handle
    is
       Rec : City_Record := City_Record'
-        (Identifier => Next_Identifier,
-         Planet     => Planet.Reference,
-         Tile       => Tile.Reference,
-         Structure  => Structure.Reference,
-         Owner      => Owner.Reference,
-         Health     => Health,
-         Loyalty    => Loyalty,
-         Agora      => Null_City_Reference,
-         Progress   => 0.0,
-         Orders     => <>,
-         Seen_By    => Empty_House_Set,
-         Prices     => <>,
-         Transfer   => <>);
+        (Identifier    => Next_Identifier,
+         Planet        => Planet.Reference,
+         Tile          => Tile.Reference,
+         Structure     => Structure.Reference,
+         Owner         => Owner.Reference,
+         Health        => Health,
+         Loyalty       => Loyalty,
+         Agora         => Null_City_Reference,
+         Progress      => 0.0,
+         Orders        => <>,
+         Seen_By       => Empty_House_Set,
+         Prices        => <>,
+         Transfer      => <>,
+         Harvest_Tiles => <>);
    begin
 
       if Structure.Is_Agora then
@@ -59,6 +60,24 @@ package body Carthage.Handles.Cities.Create is
          begin
             Carthage.Handles.Resources.For_All_Resources
               (Set_Price'Access);
+         end;
+      end if;
+
+      if Structure.Is_Harvester then
+         declare
+            use Carthage.Handles.Planets;
+            Tiles     : Surface_Tiles;
+         begin
+            Planet.Get_Tiles
+              (Origin       => Tile,
+               Min_Distance => 0,
+               Max_Distance => Structure.Radius + 1,
+               Test         => null,
+               Tiles        => Tiles);
+
+            for I in 1 .. Tile_Count (Tiles) loop
+               Rec.Harvest_Tiles.Append (Get_Tile (Tiles, I).Reference);
+            end loop;
          end;
       end if;
 

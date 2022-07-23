@@ -26,6 +26,8 @@ package Carthage.Handles.Assets is
    function Get (Reference : Asset_Reference) return Asset_Handle;
    function Empty_Handle return Asset_Handle;
 
+   function Owner (This : Asset_Handle) return House_Reference;
+
    function Has_Resource
      (This     : Asset_Handle;
       Resource : Carthage.Handles.Resources.Resource_Handle)

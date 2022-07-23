@@ -95,6 +95,16 @@ package Carthage.Handles.Planets is
       From, To : Tile_Position)
       return Natural;
 
+   function Hex_Distance
+     (This     : Planet_Handle;
+      From, To : Tile_Reference)
+      return Natural;
+
+   function Hex_Distance
+     (This     : Planet_Handle;
+      From, To : Carthage.Handles.Tiles.Tile_Handle)
+      return Natural;
+
    procedure Scan_Tiles
      (This    : Planet_Handle;
       Process : not null access
@@ -233,7 +243,7 @@ package Carthage.Handles.Planets is
 
    function Get_Tile
      (Surface : Surface_Tiles;
-                      Index   : Positive)
+      Index   : Positive)
       return Carthage.Handles.Tiles.Tile_Handle;
 
    function Orbital_Stack

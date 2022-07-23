@@ -1,11 +1,13 @@
 with Ada.Calendar.Formatting;
+with Ada.Characters.Latin_1;
+with Ada.Directories;
 with Ada.Text_IO;
 
 with Carthage.Calendar;
 
 package body Carthage.Logging is
 
-   Log_Time_Stamp    : constant Boolean := False;
+   Log_Time_Stamp    : constant Boolean := True;
    Current_Log_Level : Log_Level := 3;
    Started           : Boolean := False;
 
@@ -62,11 +64,13 @@ package body Carthage.Logging is
 
       procedure Start (Path : String) is
       begin
-         Stdout := Path = "";
-         if not Stdout then
-            Ada.Text_IO.Create
-              (File, Ada.Text_IO.Out_File, Path);
-         end if;
+         Stdout := False;
+         Ada.Text_IO.Create
+           (File, Ada.Text_IO.Out_File,
+            "log/"
+            & "carthage"
+            & (if Path = "" then Path else "-" & Path)
+            & ".log");
          Started := True;
       end Start;
 
@@ -133,15 +137,38 @@ package body Carthage.Logging is
                              then Ada.Calendar.Formatting.Image
                                (Date                  => Ada.Calendar.Clock,
                                 Include_Time_Fraction => True)
-                             & ": "
+                             & Ada.Characters.Latin_1.HT
                              else "")
-                            & Carthage.Calendar.Image
-                              (Carthage.Calendar.Clock, True)
-                            & ": " & Message;
+                            & Carthage.Calendar.Image (Carthage.Calendar.Clock)
+                            & Ada.Characters.Latin_1.HT
+                            & Message;
          begin
             Logger.Log (Log_Message);
          end;
       end if;
+   end Log;
+
+   ---------
+   -- Log --
+   ---------
+
+   procedure Log (Category : String;
+                  Message  : String)
+   is
+   begin
+      Log (3, Category, Message);
+   end Log;
+
+   ---------
+   -- Log --
+   ---------
+
+   procedure Log (Level    : Log_Level;
+                  Category : String;
+                  Message  : String)
+   is
+   begin
+      Log (Level, Category & Ada.Characters.Latin_1.HT & Message);
    end Log;
 
    -------------------
@@ -185,6 +212,9 @@ package body Carthage.Logging is
       Level : Log_Level := 3)
    is
    begin
+      if not Ada.Directories.Exists ("log") then
+         Ada.Directories.Create_Directory ("log");
+      end if;
       Current_Log_Level := Level;
       Logger.Start (Path);
       Log_Writer.Start;
@@ -197,10 +227,7 @@ package body Carthage.Logging is
 
    procedure Start_Logging (Level : Log_Level := 3) is
    begin
-      Current_Log_Level := Level;
-      Logger.Start ("");
-      Log_Writer.Start;
-      Started := True;
+      Start_Logging ("", Level);
    end Start_Logging;
 
    ------------------

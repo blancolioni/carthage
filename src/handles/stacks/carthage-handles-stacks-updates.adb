@@ -1,72 +1,74 @@
-with WL.Random;
-
-with Reiko.Updates;
-
 with Carthage.Calendar;
 with Carthage.Combat;
 
 with Carthage.Handles.Planets;
+with Carthage.Handles.Resources;
+
+with Carthage.Messages.Resources;
 
 package body Carthage.Handles.Stacks.Updates is
 
    type Stack_Manager is access all Stack_Manager_Interface'Class;
 
-   type Stack_Update is
-     new Reiko.Root_Update_Type with
-      record
-         Start   : Boolean;
-         Stack   : Stack_Handle;
-         Manager : Stack_Manager;
-      end record;
-
-   overriding function Name
-     (Update : Stack_Update)
-      return String
-   is (Update.Stack.Log_Identifier & ": "
-       & Update.Stack.Description);
-
-   overriding procedure Execute
-     (Update : Stack_Update);
-
    procedure Start_Movement
      (This    : Stack_Handle;
-      Manager : Stack_Manager);
+      Manager : Stack_Manager)
+     with Unreferenced;
 
    procedure Execute_Update
      (This    : Stack_Handle;
       Manager : Stack_Manager);
+   pragma Unreferenced (Execute_Update);
 
-   -------------
-   -- Execute --
-   -------------
-
-   overriding procedure Execute
-     (Update : Stack_Update)
-   is
+   procedure Consumption (Stack : Stack_Handle) is
+      use Carthage.Quantities;
+      Resource : constant Carthage.Handles.Resources.Resource_Handle :=
+                   Carthage.Handles.Resources.Food;
+      Available : constant Quantity_Type := Stack.Quantity (Resource);
+      Required  : Quantity_Type := Zero;
    begin
-      if Update.Start then
-         Update.Stack.Log ("starting movement");
-         Start_Movement (Update.Stack, Update.Manager);
-      else
-         Update.Stack.Log ("executing movement");
-         Execute_Update (Update.Stack, Update.Manager);
-      end if;
+      for I in 1 .. Stack.Asset_Count loop
+         declare
+            Asset : constant Assets.Asset_Handle :=
+                      Carthage.Handles.Assets.Get (Stack.Asset (I));
+         begin
+            if Asset.Unit.Eat > Zero then
+               Required := Required + Scale (Asset.Unit.Eat, 0.1);
+            end if;
+         end;
+      end loop;
 
-      if Update.Stack.Has_Movement then
-         Update.Stack.Log ("scheduling next arrival");
-         Reiko.Updates.Add_Update
-           (Update       =>
-              Stack_Update'
-                (Reiko.Root_Update_Type with
-                 Start   => False,
-                 Stack   => Update.Stack,
-                 Manager => Update.Manager),
-            Update_Delay =>
-              Reiko.Reiko_Duration
-                (Update.Stack.Movement_Duration
-                     (Update.Stack.Next_Tile)));
+      if Required > Zero then
+         declare
+            Minimum : constant Quantity_Type := Scale (Required, 5.0);
+            Like    : constant Quantity_Type := Scale (Minimum, 2.0);
+            Consume : constant Quantity_Type := Min (Required, Available);
+         begin
+            Stack.Log ("food: require " & Show (Required)
+                       & "; available " & Show (Available)
+                       & "; minimum " & Show (Minimum)
+                       & "; like " & Show (Like));
+            if Available < Minimum then
+               Stack.Log ("requesting " & Show (Like - Available) & " food");
+               declare
+                  Message : constant Carthage.Messages.Message_Interface'Class
+                    := Carthage.Messages.Resources.Required
+                      (House    => Stack.Owner,
+                       Tile     => Stack.Current_Tile,
+                       Resource => Resource,
+                       Quantity => Like - Available,
+                       Minimum  => Required);
+               begin
+                  Message.Send;
+               end;
+            end if;
+
+            if Consume > Zero then
+               Stack.Remove (Resource, Consume);
+            end if;
+         end;
       end if;
-   end Execute;
+   end Consumption;
 
    --------------------
    -- Execute_Update --
@@ -374,41 +376,5 @@ package body Carthage.Handles.Stacks.Updates is
             end;
       end case;
    end Start_Movement;
-
-   ------------------
-   -- Start_Update --
-   ------------------
-
-   procedure Start_Update
-     (Stack   : Stack_Handle;
-      Manager : not null access Stack_Manager_Interface'Class)
-   is
-      use Carthage.Calendar;
-      Delay_Duration : constant Duration :=
-        Hours (4)
-        + Duration (WL.Random.Random_Number (1, 7200));
-   begin
-      Stack.Log
-        ("starting update: delay "
-         & Carthage.Calendar.Image (Delay_Duration, True));
-      declare
-         Update : constant Stack_Update :=
-                    Stack_Update'
-                      (Reiko.Root_Update_Type with
-                       Start   => True,
-                       Stack   => Stack,
-                       Manager => Stack_Manager (Manager));
-      begin
-         Reiko.Updates.Add_Update
-           (Update       => Update,
-            Update_Delay => Reiko.Reiko_Duration (Delay_Duration));
-      end;
-   end Start_Update;
-
-   --  begin
-   --     pragma Compile_Time_Warning
-   --       (Standard.True, "Start_Update unimplemented");
-   --     raise Program_Error with "Unimplemented procedure Start_Update";
-   --  end Start_Update;
 
 end Carthage.Handles.Stacks.Updates;

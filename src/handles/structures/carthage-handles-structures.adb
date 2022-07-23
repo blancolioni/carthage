@@ -1,11 +1,16 @@
 with WL.String_Maps;
 
+with Carthage.Handles.Houses;
 with Carthage.Handles.Terrain;
 with Carthage.Handles.Tiles;
 
+with Carthage.Messages.Resources;
+
+with Carthage.Logging;
+
 package body Carthage.Handles.Structures is
 
-   Log_Production : constant Boolean := False;
+   Log_Production : constant Boolean := True;
 
    package Structure_Vectors is
      new Ada.Containers.Vectors (Real_Structure_Reference, Structure_Record);
@@ -137,6 +142,8 @@ package body Carthage.Handles.Structures is
 
    function Execute_Production
      (This       : Structure_Handle;
+      House      : House_Reference;
+      Tile       : Tile_Reference;
       Stock      : Carthage.Handles.Stocks.Stock_Handle_Interface'Class;
       Efficiency : Unit_Real;
       Factor     : Unit_Real)
@@ -150,6 +157,8 @@ package body Carthage.Handles.Structures is
         (Resource : Carthage.Handles.Resources.Resource_Handle;
          Quantity : Carthage.Quantities.Quantity_Type);
 
+      procedure Log (Message : String);
+
       -----------
       -- Check --
       -----------
@@ -158,19 +167,55 @@ package body Carthage.Handles.Structures is
         (Resource : Carthage.Handles.Resources.Resource_Handle;
          Quantity : Carthage.Quantities.Quantity_Type)
       is
-         use type Carthage.Quantities.Quantity_Type;
-         Need : constant Carthage.Quantities.Quantity_Type :=
-                  Carthage.Quantities.Scale (Quantity, Factor);
+         use Carthage.Quantities;
+         Need : constant Quantity_Type :=
+                  Scale (Quantity, Factor);
+         Like : constant Quantity_Type :=
+                  Scale (Need, 7.0);
+         Have : constant Quantity_Type := Stock.Quantity (Resource);
+         Min  : constant Quantity_Type :=
+                  (if Need < Have
+                   then Zero
+                   else Need - Have);
       begin
+         if Like > Have then
+            declare
+               Message : constant Carthage.Messages.Message_Interface'Class :=
+                           Carthage.Messages.Resources.Required
+                             (House    => Carthage.Handles.Houses.Get (House),
+                              Tile     => Carthage.Handles.Tiles.Get (Tile),
+                              Resource => Resource,
+                              Quantity => Like - Have,
+                              Minimum  => Min);
+            begin
+               Message.Send;
+            end;
+         end if;
+
          if Need > Stock.Quantity (Resource) then
             if Log_Production then
-               This.Log ("insufficient " & Resource.Tag
-                         & " (require "
-                         & Carthage.Quantities.Show (Need) & ")");
+               Log ("insufficient " & Resource.Tag
+                    & " (require "
+                    & Carthage.Quantities.Show (Need) & ")");
             end if;
             Can_Proceed := False;
          end if;
       end Check;
+
+      ---------
+      -- Log --
+      ---------
+
+      procedure Log (Message : String) is
+      begin
+         Carthage.Logging.Log
+           (Carthage.Handles.Houses.Get (House).Tag
+            & " "
+            & This.Tag
+            & " "
+            & Carthage.Handles.Tiles.Get (Tile).Short_Name,
+            Message);
+      end Log;
 
    begin
 
@@ -185,7 +230,7 @@ package body Carthage.Handles.Structures is
                                      Efficiency * Factor);
          begin
             if Log_Production then
-               This.Log
+               Log
                  ("producing "
                   & Carthage.Quantities.Show (Produced_Quantity)
                   & " " & This.Production_Output.Tag);

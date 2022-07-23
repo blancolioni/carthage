@@ -3,8 +3,6 @@ with Ada.Strings.Fixed;
 
 with WL.String_Maps;
 
-with Reiko.Updates;
-
 with Carthage.Handles.Goals;
 with Carthage.Handles.Vectors;
 
@@ -21,10 +19,11 @@ package body Carthage.Handles.Managers is
    Manager_Map : Manager_Maps.Map;
 
    function To_Key
-     (Class  : Manager_Class;
-      House  : House_Reference;
-      Planet : Planet_Reference;
-      City   : City_Reference)
+     (Class     : Manager_Class;
+      Authority : Manager_Authority;
+      House     : House_Reference;
+      Planet    : Planet_Reference;
+      City      : City_Reference)
       return String;
 
    type Manager_Access is access all Root_Manager_Record'Class;
@@ -91,27 +90,6 @@ package body Carthage.Handles.Managers is
      (Handle : Manager_Handle)
       return Carthage.Calendar.Time
    is (Get (Handle).Next_Update_At);
-
-   type Manager_Update is
-     new Reiko.Root_Update_Type with
-      record
-         Handle : Manager_Handle;
-      end record;
-
-   overriding function Name
-     (Update : Manager_Update)
-      return String
-   is (Update.Handle.Short_Name);
-
-   overriding procedure Execute
-     (Update : Manager_Update);
-
-   function To_Update
-     (Reference : Manager_Reference)
-      return Manager_Update'Class
-   is (Manager_Update'
-         (Reiko.Root_Update_Type with
-            Handle => Get (Reference)));
 
    protected Pending_Goal_List is
 
@@ -237,17 +215,6 @@ package body Carthage.Handles.Managers is
       return Get (Reference);
    end Create_Manager;
 
-   -------------
-   -- Execute --
-   -------------
-
-   overriding procedure Execute
-     (Update : Manager_Update)
-   is
-   begin
-      Update.Handle.Activate;
-   end Execute;
-
    -----------------------------
    -- For_All_Active_Managers --
    -----------------------------
@@ -274,17 +241,19 @@ package body Carthage.Handles.Managers is
    -----------------
 
    function Get_Manager
-     (Class  : Manager_Class;
-      House  : House_Reference;
-      Planet : Planet_Reference := Null_Planet_Reference;
-      City   : City_Reference := Null_City_Reference)
+     (Class       : Manager_Class;
+      Authority   : Manager_Authority;
+      House       : House_Reference;
+      Planet      : Planet_Reference := Null_Planet_Reference;
+      City        : City_Reference := Null_City_Reference)
       return Manager_Handle
    is
       Key : constant String :=
-              To_Key (Class  => Class,
-                      House  => House,
-                      Planet => Planet,
-                      City   => City);
+              To_Key (Class     => Class,
+                      Authority => Authority,
+                      House     => House,
+                      Planet    => Planet,
+                      City      => City);
    begin
       if Manager_Map.Contains (Key) then
          return Get (Manager_Map.Element (Key));
@@ -292,28 +261,6 @@ package body Carthage.Handles.Managers is
          return Empty_Handle;
       end if;
    end Get_Manager;
-
-   ------------------------------
-   -- Ground_Transport_Manager --
-   ------------------------------
-
-   function Ground_Transport_Manager
-     (House  : House_Reference;
-      Planet : Planet_Reference)
-      return Manager_Handle
-   is
-      Key : constant String :=
-              To_Key (Class  => Ground_Transport,
-                      House  => House,
-                      Planet => Planet,
-                      City   => Null_City_Reference);
-   begin
-      if Manager_Map.Contains (Key) then
-         return Get (Manager_Map.Element (Key));
-      else
-         return Empty_Handle;
-      end if;
-   end Ground_Transport_Manager;
 
    -----------------
    -- Information --
@@ -334,14 +281,16 @@ package body Carthage.Handles.Managers is
    ----------------
 
    procedure Initialize
-     (Rec   : in out Root_Manager_Record'Class;
-      Class : Manager_Class;
-      House : Carthage.Handles.Houses.House_Handle)
+     (Rec         : in out Root_Manager_Record'Class;
+      Class       : Manager_Class;
+      Authority   : Manager_Authority;
+      House       : Carthage.Handles.Houses.House_Handle)
    is
    begin
       Rec.Identifier := Next_Identifier;
       Rec.Reference := Null_Manager_Reference;
       Rec.Class := Class;
+      Rec.Authority := Authority;
       Rec.Active    := True;
       Rec.Scheduled := False;
       Rec.House     := House.Reference;
@@ -361,11 +310,12 @@ package body Carthage.Handles.Managers is
    procedure Initialize
      (Rec         : in out Root_Manager_Record'Class;
       Class       : Manager_Class;
+      Authority   : Manager_Authority;
       House       : Carthage.Handles.Houses.House_Handle;
       First_Event : Carthage.Calendar.Time)
    is
    begin
-      Rec.Initialize (Class, House);
+      Rec.Initialize (Class, Authority, House);
       Rec.Next_Update_At := First_Event;
       Rec.Scheduled := True;
    end Initialize;
@@ -377,6 +327,7 @@ package body Carthage.Handles.Managers is
    procedure Initialize
      (Rec          : in out Root_Manager_Record'Class;
       Class        : Manager_Class;
+      Authority    : Manager_Authority;
       House        : Carthage.Handles.Houses.House_Handle;
       First_Event  : Duration;
       Random_Start : Boolean)
@@ -390,7 +341,7 @@ package body Carthage.Handles.Managers is
                         * Carthage.Random.Unit_Random)
                      else First_Event);
    begin
-      Rec.Initialize (Class, House, Start);
+      Rec.Initialize (Class, Authority, House, Start);
    end Initialize;
 
    ----------
@@ -455,10 +406,11 @@ package body Carthage.Handles.Managers is
    is
       use Manager_Maps;
       Key      : constant String :=
-                   To_Key (Class  => Manager.Class,
-                           House  => Manager.House,
-                           Planet => Planet,
-                           City   => City);
+                   To_Key (Class     => Manager.Class,
+                           Authority => Manager.Authority,
+                           House     => Manager.House,
+                           Planet    => Planet,
+                           City      => City);
       Position : constant Cursor := Manager_Map.Find (Key);
    begin
       if Has_Element (Position) then
@@ -525,9 +477,6 @@ package body Carthage.Handles.Managers is
    begin
       Rec.Scheduled := True;
       Rec.Next_Update_At := Clock;
-      Reiko.Updates.Add_Update_At
-        (Update    => To_Update (Rec.Reference),
-         Update_At => Reiko.Reiko_Time (Carthage.Calendar.To_Days (Clock)));
    end Schedule_Next_Update_At;
 
    ------------------
@@ -576,16 +525,18 @@ package body Carthage.Handles.Managers is
    ------------
 
    function To_Key
-     (Class  : Manager_Class;
-      House  : House_Reference;
-      Planet : Planet_Reference;
-      City   : City_Reference)
+     (Class     : Manager_Class;
+      Authority : Manager_Authority;
+      House     : House_Reference;
+      Planet    : Planet_Reference;
+      City      : City_Reference)
       return String
    is
       function Trim (X : String) return String
       is (Ada.Strings.Fixed.Trim (X, Ada.Strings.Left));
    begin
       return Ada.Characters.Handling.To_Lower (Class'Image)
+        & "-" & Ada.Characters.Handling.To_Lower (Authority'Image)
         & "-" & Trim (House'Image)
         & "-" & Trim (Planet'Image)
         & "-" & Trim (City'Image);
@@ -625,6 +576,37 @@ package body Carthage.Handles.Managers is
 
    begin
       Carthage.Handles.Goals.Get (Rec.Goals).Update (Check_Goal'Access);
+   end Update_Goals;
+
+   ------------------
+   -- Update_Goals --
+   ------------------
+
+   procedure Update_Goals
+     (Rec     : in out Root_Manager_Record'Class;
+      Process : not null access
+        procedure (Goal : in out Carthage.Goals.Goal_Record'Class;
+                   Complete : out Boolean))
+   is
+      function Always
+        (Goal : Carthage.Goals.Goal_Record'Class)
+         return Boolean;
+
+      ------------
+      -- Always --
+      ------------
+
+      function Always
+        (Goal : Carthage.Goals.Goal_Record'Class)
+         return Boolean
+      is
+         pragma Unreferenced (Goal);
+      begin
+         return True;
+      end Always;
+
+   begin
+      Rec.Update_Goals (Always'Access, Process);
    end Update_Goals;
 
 end Carthage.Handles.Managers;

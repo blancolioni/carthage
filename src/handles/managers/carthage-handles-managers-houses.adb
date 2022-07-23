@@ -48,7 +48,11 @@ package body Carthage.Handles.Managers.Houses is
       end Create_Planet_Manager;
 
    begin
-      Rec.Initialize (House_Manager, House);
+      Rec.Initialize
+        (Class     => Carthage.Handles.Managers.House,
+         Authority => General,
+         House     => House);
+
       Handle := Rec.Create_Manager;
 
       Carthage.Handles.Planets.For_All_Planets

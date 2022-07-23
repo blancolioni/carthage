@@ -1,31 +1,24 @@
-with Ada.Calendar;
-with Ada.Containers.Indefinite_Holders;
+--  with Ada.Calendar;
+--  with Ada.Containers.Indefinite_Holders;
+with Ada.Text_IO;
 
-with WL.Heaps;
+--  with WL.Heaps;
+with WL.String_Sets;
 
-with Hira.City;
+with Carthage.Handles.Cities;
+with Carthage.Handles.Houses;
+with Carthage.Handles.Planets;
+with Carthage.Handles.Resources;
+with Carthage.Handles.Stacks;
+with Carthage.Handles.Structures;
+with Carthage.Handles.Tiles;
 
-with Carthage.Cities;
-with Carthage.Houses;
-with Carthage.Planets;
-with Carthage.Stacks;
---  with Carthage.Structures;
-with Carthage.Tiles;
+with Carthage.Handles.Cities.Updates;
+with Carthage.Handles.Stacks.Updates;
+
+with Carthage.Managers.Resources;
 
 package body Carthage.Updates is
-
-   Current_Time_Acceleration : Duration := 0.0;
-   Last_Update               : Ada.Calendar.Time;
-
-   package Update_Holders is
-      new Ada.Containers.Indefinite_Holders (Update_Interface'Class);
-
-   package Update_Queues is
-     new WL.Heaps
-       (Carthage.Calendar.Time, Update_Holders.Holder,
-        Carthage.Calendar.">", Update_Holders."=");
-
-   Update_Queue              : Update_Queues.Heap;
 
    -------------------------
    -- Before_First_Update --
@@ -34,41 +27,117 @@ package body Carthage.Updates is
    procedure Before_First_Update is
 
       procedure Reset_Planet_State
-        (Planet : Carthage.Planets.Planet_Class);
+        (Planet : Carthage.Handles.Planets.Planet_Handle);
 
-      procedure Add_Planet_Maps (House : Carthage.Houses.House_Class);
+      procedure Add_Planet_Maps (House : Carthage.Handles.Houses.House_Handle);
 
       procedure City_Look
-        (City : Carthage.Cities.City_Class);
+        (City : Carthage.Handles.Cities.City_Handle);
 
       procedure Find_Agora
-        (City : Carthage.Cities.City_Class);
+        (City : Carthage.Handles.Cities.City_Handle);
 
       procedure Stack_Look
-        (Stack : Carthage.Stacks.Stack_Class);
+        (Stack : Carthage.Handles.Stacks.Stack_Handle);
 
       procedure Set_Planet_Owner
-        (Palace : Carthage.Cities.City_Class);
+        (Palace : Carthage.Handles.Cities.City_Handle);
+
+      procedure Add_Planet_Managers
+        (House  : Carthage.Handles.Houses.House_Handle);
+
+      -------------------------
+      -- Add_Planet_Managers --
+      -------------------------
+
+      procedure Add_Planet_Managers
+        (House  : Carthage.Handles.Houses.House_Handle)
+      is
+         Processed_Planets : WL.String_Sets.Set;
+
+         procedure Check_City_Planet
+           (City : Carthage.Handles.Cities.City_Handle);
+
+         procedure Check_Stack_Planet
+           (Stack : Carthage.Handles.Stacks.Stack_Handle);
+
+         -----------------------
+         -- Check_City_Planet --
+         -----------------------
+
+         procedure Check_City_Planet
+           (City : Carthage.Handles.Cities.City_Handle)
+         is
+         begin
+            if City.Owner.Tag = House.Tag then
+               declare
+                  use Carthage.Handles.Planets;
+                  Planet : constant Planet_Handle := Get (City.Planet);
+               begin
+                  if not Processed_Planets.Contains (Planet.Tag) then
+                     Carthage.Managers.Resources.Create_Planet_Resource_Manager
+                       (House  => House,
+                        Planet => Planet);
+                     Processed_Planets.Include (Planet.Tag);
+                  end if;
+               end;
+            end if;
+         end Check_City_Planet;
+
+         ------------------------
+         -- Check_Stack_Planet --
+         ------------------------
+
+         procedure Check_Stack_Planet
+           (Stack : Carthage.Handles.Stacks.Stack_Handle)
+         is
+         begin
+            if Stack.Has_Assets and then Stack.Owner.Tag = House.Tag then
+               declare
+                  use Carthage.Handles.Planets;
+                  Planet : constant Planet_Handle := Get (Stack.Planet);
+               begin
+                  if not Processed_Planets.Contains (Planet.Tag) then
+                     Carthage.Managers.Resources.Create_Planet_Resource_Manager
+                       (House  => House,
+                        Planet => Planet);
+                     Processed_Planets.Include (Planet.Tag);
+                  end if;
+               end;
+            end if;
+         end Check_Stack_Planet;
+
+      begin
+         Carthage.Handles.Cities.For_All_Cities (Check_City_Planet'Access);
+         Carthage.Handles.Stacks.For_All_Stacks (Check_Stack_Planet'Access);
+      end Add_Planet_Managers;
 
       ---------------------
       -- Add_Planet_Maps --
       ---------------------
 
-      procedure Add_Planet_Maps (House : Carthage.Houses.House_Class) is
+      procedure Add_Planet_Maps
+        (House : Carthage.Handles.Houses.House_Handle)
+      is
 
-         procedure Add_Planet (Planet : Carthage.Planets.Planet_Class);
+         procedure Add_Planet
+           (Reference : Carthage.Handles.Planet_Reference);
 
          ----------------
          -- Add_Planet --
          ----------------
 
-         procedure Add_Planet (Planet : Carthage.Planets.Planet_Class) is
+         procedure Add_Planet
+           (Reference : Carthage.Handles.Planet_Reference)
+         is
+            Planet : constant Carthage.Handles.Planets.Planet_Handle :=
+                       Carthage.Handles.Planets.Get (Reference);
          begin
-            Carthage.Planets.Set_Explored_By (Planet, House);
+            Planet.Set_Explored_By (House.Reference);
          end Add_Planet;
 
       begin
-         Carthage.Houses.Scan_Known_Planets (House, Add_Planet'Access);
+         House.Scan_Known_Planets (Add_Planet'Access);
       end Add_Planet_Maps;
 
       ---------------
@@ -76,25 +145,28 @@ package body Carthage.Updates is
       ---------------
 
       procedure City_Look
-        (City : Carthage.Cities.City_Class)
+        (City : Carthage.Handles.Cities.City_Handle)
       is
-         Tiles : Carthage.Planets.Surface_Tiles;
+         Tiles : Carthage.Handles.Planets.Surface_Tiles;
+         Planet : constant Carthage.Handles.Planets.Planet_Handle :=
+                    Carthage.Handles.Planets.Get (City.Planet);
+         Tile   : constant Carthage.Handles.Tiles.Tile_Handle :=
+                    Carthage.Handles.Tiles.Get (City.Tile);
       begin
-         Carthage.Planets.Get_Tiles
-           (This => City.Planet,
-            Origin => City.Tile,
+         Carthage.Handles.Planets.Get_Tiles
+           (This         => Planet,
+            Origin       => Tile,
             Min_Distance => 0,
             Max_Distance => 6,
             Test         => null,
             Tiles        => Tiles);
 
-         for I in 1 .. Carthage.Planets.Tile_Count (Tiles) loop
+         for I in 1 .. Carthage.Handles.Planets.Tile_Count (Tiles) loop
             declare
-               Tile : constant Carthage.Tiles.Tile_Class :=
-                        Carthage.Planets.Get_Tile (Tiles, I);
+               Tile : constant Carthage.Handles.Tiles.Tile_Handle :=
+                        Carthage.Handles.Planets.Get_Tile (Tiles, I);
             begin
-               Carthage.Tiles.Set_Currently_Visible_To
-                 (Tile, City.Owner);
+               Tile.Set_Currently_Visible_To (City.Owner);
             end;
          end loop;
 
@@ -105,47 +177,48 @@ package body Carthage.Updates is
       ----------------
 
       procedure Find_Agora
-        (City : Carthage.Cities.City_Class)
+        (City : Carthage.Handles.Cities.City_Handle)
       is
 
          Minimum_Distance : Natural := Natural'Last;
-         Closest_Agora    : Carthage.Cities.City_Handle :=
-                                 Hira.City.Empty_Handle;
-
-         procedure Check (Check_City : Carthage.Cities.City_Class);
+         Closest_Agora    : Carthage.Handles.Cities.City_Handle :=
+                              Carthage.Handles.Cities.Empty_Handle;
+         procedure Check
+           (Reference : Carthage.Handles.City_Reference);
 
          -----------
          -- Check --
          -----------
 
          procedure Check
-           (Check_City : Carthage.Cities.City_Class)
+           (Reference : Carthage.Handles.City_Reference)
          is
+            Check_City : constant Carthage.Handles.Cities.City_Handle :=
+                           Carthage.Handles.Cities.Get (Reference);
             D : constant Natural :=
-                  Carthage.Planets.Hex_Distance
-                    (This => City.Planet,
-                     From => Carthage.Tiles.Position (City.Tile),
-                     To   => Carthage.Tiles.Position (Check_City.Tile));
+                  Carthage.Handles.Planets.Get (City.Planet)
+                  .Hex_Distance
+                     (From => City.Tile,
+                      To   => Check_City.Tile);
          begin
-            if Check_City.Structure.Agora
-              and then not Carthage.Houses.At_War_With
-                (City.Owner, Check_City.Owner)
+            if Carthage.Handles.Structures.Get (Check_City.Structure).Is_Agora
+              and then not City.Owner.At_War_With (Check_City.Owner)
               and then D < Minimum_Distance
             then
-               Closest_Agora := Check_City.To_City_Handle;
+               Closest_Agora := Check_City;
                Minimum_Distance := D;
             end if;
          end Check;
 
       begin
 
-         if not Carthage.Cities.Is_Agora (City) then
-            for Check_City of Hira.City.Select_By_Planet (City.Planet) loop
-               Check (Check_City);
-            end loop;
+         if not City.Is_Agora then
+
+            Carthage.Handles.Planets.Get (City.Planet)
+              .For_All_Cities (Check'Access);
 
             if Closest_Agora.Has_Element then
-               City.Update_City.Set_Agora (Closest_Agora).Done;
+               City.Set_Agora (Closest_Agora);
             end if;
          end if;
 
@@ -156,10 +229,10 @@ package body Carthage.Updates is
       ------------------------
 
       procedure Reset_Planet_State
-        (Planet : Carthage.Planets.Planet_Class)
+        (Planet : Carthage.Handles.Planets.Planet_Handle)
       is
       begin
-         Carthage.Planets.Clear_Visibility (Planet);
+         Carthage.Handles.Planets.Clear_Visibility (Planet);
       end Reset_Planet_State;
 
       ----------------------
@@ -167,10 +240,11 @@ package body Carthage.Updates is
       ----------------------
 
       procedure Set_Planet_Owner
-        (Palace : Carthage.Cities.City_Class)
+        (Palace : Carthage.Handles.Cities.City_Handle)
       is
       begin
-         Palace.Planet.Update_Planet.Set_Owner (Palace.Owner).Done;
+         Carthage.Handles.Planets.Get (Palace.Planet)
+           .Set_Owner (Palace.Owner.Reference);
       end Set_Planet_Owner;
 
       ----------------
@@ -178,160 +252,94 @@ package body Carthage.Updates is
       ----------------
 
       procedure Stack_Look
-        (Stack : Carthage.Stacks.Stack_Class)
+        (Stack : Carthage.Handles.Stacks.Stack_Handle)
       is
-         use type Carthage.Stacks.Asset_Count;
-         Tiles : Carthage.Planets.Surface_Tiles;
+         Tiles : Carthage.Handles.Planets.Surface_Tiles;
+         Planet : constant Carthage.Handles.Planets.Planet_Handle :=
+                    Carthage.Handles.Planets.Get (Stack.Planet);
       begin
 
-         if Stack.Has_Tile then
-            Stack.Planet.Get_Tiles
-              (Origin       => Stack.Tile,
+         if Stack.Is_Ground then
+            Planet.Get_Tiles
+              (Origin       => Stack.Current_Tile,
                Min_Distance => 0,
                Max_Distance => 6,
                Test         => null,
                Tiles        => Tiles);
 
-            for I in 1 .. Carthage.Planets.Tile_Count (Tiles) loop
+            for I in 1 .. Carthage.Handles.Planets.Tile_Count (Tiles) loop
                declare
-                  Tile : constant Carthage.Tiles.Any_Reference :=
-                           Carthage.Planets.Get_Tile (Tiles, I);
+                  Tile : constant Carthage.Handles.Tiles.Tile_Handle :=
+                           Carthage.Handles.Planets.Get_Tile (Tiles, I);
                begin
-                  Tile.Update.Set_Currently_Visible_To (Stack.Owner);
+                  Tile.Set_Currently_Visible_To (Stack.Owner);
                end;
             end loop;
-         elsif Stack.Is_Orbiting
-           and then Stack.Count > 0
-             and then not Stack.Planet.Seen_By (Stack.Owner)
+         elsif Stack.Is_Orbital
+           and then Stack.Has_Assets
+             and then not Planet.Seen_By (Stack.Owner.Reference)
          then
-            Stack.Planet.Update.Set_Seen_By (Stack.Owner);
+            Planet.Set_Seen_By (Stack.Owner.Reference);
          end if;
       end Stack_Look;
 
    begin
 
-      Carthage.Planets.Scan (Reset_Planet_State'Access);
+      Ada.Text_IO.Put_Line ("Initializing");
 
-      Carthage.Houses.Scan (Add_Planet_Maps'Access);
+      Carthage.Handles.Planets.For_All_Planets (Reset_Planet_State'Access);
 
-      Carthage.Cities.Scan_Cities
-        (Carthage.Structures.Get ("palace"),
+      Carthage.Handles.Houses.For_All_Houses (Add_Planet_Maps'Access);
+
+      Carthage.Handles.Cities.For_All_Cities_With_Structure
+        (Carthage.Handles.Structures.Get ("palace").Reference,
          Set_Planet_Owner'Access);
 
-      Carthage.Cities.Scan_Cities
+      Carthage.Handles.Cities.For_All_Cities
         (City_Look'Access);
 
-      Carthage.Cities.Scan_Cities
+      Carthage.Handles.Cities.For_All_Cities
         (Find_Agora'Access);
 
-      Carthage.Stacks.Scan_Stacks
+      Carthage.Handles.Stacks.For_All_Stacks
         (Stack_Look'Access);
 
-      Last_Update := Ada.Calendar.Clock;
+      Carthage.Handles.Houses.For_All_Houses (Add_Planet_Managers'Access);
 
    end Before_First_Update;
 
-   -----------
-   -- Queue --
-   -----------
+   ------------------
+   -- Daily_Update --
+   ------------------
 
-   procedure Queue
-     (Item       : Update_Interface'Class;
-      Next_Event : Carthage.Calendar.Time)
-   is
+   procedure Daily_Update is
+
+      procedure Execute_City_Production
+        (Resource : Carthage.Handles.Resources.Resource_Handle);
+
+      -----------------------------
+      -- Execute_City_Production --
+      -----------------------------
+
+      procedure Execute_City_Production
+        (Resource : Carthage.Handles.Resources.Resource_Handle)
+      is
+      begin
+         Carthage.Handles.Cities.For_All_Producers
+           (Resource => Resource,
+            Process  =>
+              Carthage.Handles.Cities.Updates.Execute_City_Production'Access);
+      end Execute_City_Production;
+
    begin
-      Update_Queue.Insert (Next_Event, Update_Holders.To_Holder (Item));
-   end Queue;
-
-   -----------
-   -- Queue --
-   -----------
-
-   procedure Queue
-     (Item        : Update_Interface'Class;
-      Event_Delay : Duration)
-   is
-      use Carthage.Calendar;
-   begin
-      Queue (Item, Clock + Event_Delay);
-   end Queue;
-
-   ---------------------------
-   -- Set_Time_Acceleration --
-   ---------------------------
-
-   procedure Set_Time_Acceleration (Factor : Duration) is
-   begin
-      Current_Time_Acceleration := Factor;
-   end Set_Time_Acceleration;
-
-   ------------
-   -- Update --
-   ------------
-
-   procedure Update is
-      use Carthage.Calendar;
-      use type Ada.Calendar.Time;
-      Now : constant Ada.Calendar.Time := Ada.Calendar.Clock;
-      Time_Since_Last_Update : constant Duration :=
-                                 Now - Last_Update;
-   begin
-      Advance (Time_Since_Last_Update * Current_Time_Acceleration);
-      Last_Update := Now;
-
-      while Update_Queue.First_Key <= Clock loop
-         declare
-            Update : constant Update_Interface'Class :=
-                       Update_Queue.First_Element.Element;
-         begin
-            Update_Queue.Delete_First;
-            Update.Activate;
-         end;
-      end loop;
-
-   end Update;
-
---
---        procedure Execute_Round
---          (Battle : in out Carthage.Combat.Battle_Record);
---
---        -------------------
---        -- Execute_Round --
---        -------------------
---
---        procedure Execute_Round
---          (Battle : in out Carthage.Combat.Battle_Record)
---        is
---           use Carthage.Combat;
---        begin
---           Attacker (Battle).Log ("attacking " & Defender (Battle).Name);
---           for Weapon in Carthage.Units.Weapon_Category loop
---              declare
---                 Round : constant Carthage.Combat.Attack_Record_Array :=
---                           Carthage.Combat.Attack_Round (Battle, Weapon);
---              begin
---                 for Attack of Round loop
---                    Attacker (Battle).Log (Image (Attack));
---                 end loop;
---              end;
---           end loop;
---        end Execute_Round;
---
---     begin
---        Ada.Text_IO.Put_Line
---          ("Update: "
---           & Carthage.Calendar.Image (Carthage.Calendar.Clock));
---        Carthage.Logging.Log ("starting update");
---        Carthage.Managers.Start_Manager_Turns;
---        Carthage.Managers.Execute_Manager_Turns;
---        Carthage.Cities.Updates.Execute_Orders;
---        Carthage.Cities.Updates.Execute_Production;
---        Carthage.Stacks.Updates.Execute_Orders;
---        Carthage.Houses.Scan (Carthage.Houses.Log_Status'Access);
---        Carthage.Combat.Scan_Battles (Execute_Round'Access);
---        Carthage.Stacks.Remove_Empty_Ground_Stacks;
---        Carthage.Logging.Log ("update complete");
---        Carthage.Calendar.Advance (Carthage.Calendar.Days (1));
---     end Update;
+      Carthage.Handles.Cities.For_All_Harvesters
+        (Carthage.Handles.Cities.Updates.Execute_Harvester_Production'Access);
+      Carthage.Handles.Resources.For_All_Resources
+        (Execute_City_Production'Access);
+      Carthage.Handles.Cities.For_All_Cities
+        (Carthage.Handles.Cities.Updates.Execute_City_Consumption'Access);
+      Carthage.Handles.Stacks.For_All_Ground_Stacks
+        (Carthage.Handles.Stacks.Updates.Consumption'Access);
+   end Daily_Update;
 
 end Carthage.Updates;

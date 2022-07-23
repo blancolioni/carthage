@@ -20,7 +20,6 @@ package body Carthage.Handles.Managers.Assets is
       record
          Planet    : Planet_Reference;
          Assets    : Asset_Lists.List;
-         Transport : Manager_Reference;
       end record;
 
    overriding function Name
@@ -42,8 +41,7 @@ package body Carthage.Handles.Managers.Assets is
 
    procedure Create_Ground_Asset_Manager
      (House     : Carthage.Handles.Houses.House_Handle;
-      Planet    : Carthage.Handles.Planets.Planet_Handle;
-      Transport : Manager_Handle)
+      Planet    : Carthage.Handles.Planets.Planet_Handle)
    is
 
       function Get_Planetary_Assets return Asset_Lists.List;
@@ -87,13 +85,13 @@ package body Carthage.Handles.Managers.Assets is
       Handle : Manager_Handle;
    begin
       Rec.Initialize
-        (Class        => Ground_Assets,
+        (Class        => Ground,
+         Authority    => Asset_Management,
          House        => House,
          First_Event  => Carthage.Calendar.Days (30),
          Random_Start => False);
 
       Rec.Planet := Planet.Reference;
-      Rec.Transport := Transport.Reference;
       Rec.Assets := Get_Planetary_Assets;
 
       Handle := Rec.Create_Manager;

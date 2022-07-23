@@ -13,14 +13,15 @@ with Carthage.Handles.Stocks;
 
 package Carthage.Handles.Managers is
 
-   type Manager_Class is
-     (House_Manager,
-      Ground_Transport,
-      Interstellar_Transport,
-      Ground_Assets,
-      Space_Assets,
-      Ground_Resources,
-      Production);
+   type Manager_Class is (Ground, Space, House);
+
+   type Manager_Authority is
+     (General, Budget,
+      Planet_Management,
+      Transport_Management,
+      Asset_Management,
+      Resource_Management,
+      Production_Management);
 
    Manager_Version : constant Object_Version := (0, 1, 0);
 
@@ -102,19 +103,22 @@ package Carthage.Handles.Managers is
       City    : City_Reference := Null_City_Reference);
 
    procedure Initialize
-     (Rec   : in out Root_Manager_Record'Class;
-      Class : Manager_Class;
-      House : Carthage.Handles.Houses.House_Handle);
+     (Rec         : in out Root_Manager_Record'Class;
+      Class       : Manager_Class;
+      Authority   : Manager_Authority;
+      House       : Carthage.Handles.Houses.House_Handle);
 
    procedure Initialize
      (Rec         : in out Root_Manager_Record'Class;
       Class       : Manager_Class;
+      Authority   : Manager_Authority;
       House       : Carthage.Handles.Houses.House_Handle;
       First_Event : Carthage.Calendar.Time);
 
    procedure Initialize
      (Rec          : in out Root_Manager_Record'Class;
       Class        : Manager_Class;
+      Authority    : Manager_Authority;
       House        : Carthage.Handles.Houses.House_Handle;
       First_Event  : Duration;
       Random_Start : Boolean);
@@ -164,6 +168,12 @@ package Carthage.Handles.Managers is
 
    procedure Update_Goals
      (Rec     : in out Root_Manager_Record'Class;
+      Process : not null access
+        procedure (Goal : in out Carthage.Goals.Goal_Record'Class;
+                   Complete : out Boolean));
+
+   procedure Update_Goals
+     (Rec     : in out Root_Manager_Record'Class;
       Test    : not null access
         function (Goal : Carthage.Goals.Goal_Record'Class) return Boolean;
       Process : not null access
@@ -171,15 +181,11 @@ package Carthage.Handles.Managers is
                    Complete : out Boolean));
 
    function Get_Manager
-     (Class  : Manager_Class;
-      House  : House_Reference;
-      Planet : Planet_Reference := Null_Planet_Reference;
-      City   : City_Reference := Null_City_Reference)
-      return Manager_Handle;
-
-   function Ground_Transport_Manager
-     (House  : House_Reference;
-      Planet : Planet_Reference)
+     (Class       : Manager_Class;
+      Authority   : Manager_Authority;
+      House       : House_Reference;
+      Planet      : Planet_Reference := Null_Planet_Reference;
+      City        : City_Reference := Null_City_Reference)
       return Manager_Handle;
 
    procedure For_All_Active_Managers
@@ -221,6 +227,7 @@ private
          Identifier     : Object_Identifier;
          Reference      : Manager_Reference;
          Class          : Manager_Class;
+         Authority      : Manager_Authority;
          Active         : Boolean;
          Scheduled      : Boolean;
          House          : House_Reference;

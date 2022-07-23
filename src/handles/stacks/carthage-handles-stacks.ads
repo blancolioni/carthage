@@ -223,6 +223,9 @@ package Carthage.Handles.Stacks is
    procedure For_All_Stacks
      (Process : not null access procedure (Stack : Stack_Handle));
 
+   procedure For_All_Ground_Stacks
+     (Process : not null access procedure (Stack : Stack_Handle));
+
    procedure Remove_Empty_Ground_Stacks;
 
    type Asset_Meta_Manager_Interface is interface;

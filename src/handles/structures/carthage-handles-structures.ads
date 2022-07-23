@@ -89,6 +89,8 @@ package Carthage.Handles.Structures is
 
    function Execute_Production
      (This       : Structure_Handle;
+      House      : House_Reference;
+      Tile       : Tile_Reference;
       Stock      : Carthage.Handles.Stocks.Stock_Handle_Interface'Class;
       Efficiency : Unit_Real;
       Factor     : Unit_Real)

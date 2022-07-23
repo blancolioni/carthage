@@ -154,17 +154,17 @@ begin
       end Add;
 
    begin
+      Add ("resources", Resources.Load'Access, Resources.Save'Access);
       Add ("assets", Assets.Load'Access, Assets.Save'Access);
+      Add ("structures", Structures.Load'Access, Structures.Save'Access);
       Add ("cities", Cities.Load'Access, Cities.Save'Access);
       Add ("galaxy", Galaxy.Load'Access, Galaxy.Save'Access);
       Add ("goals", Goals.Load'Access, Goals.Save'Access);
       Add ("houses", Houses.Load'Access, Houses.Save'Access);
       Add ("managers", Managers.Load'Access, Managers.Save'Access);
       Add ("planets", Planets.Load'Access, Planets.Save'Access);
-      Add ("resources", Resources.Load'Access, Resources.Save'Access);
       Add ("stacks", Stacks.Load'Access, Stacks.Save'Access);
       Add ("stocks", Stocks.Load'Access, Stocks.Save'Access);
-      Add ("structures", Structures.Load'Access, Structures.Save'Access);
       Add ("technology", Technology.Load'Access, Technology.Save'Access);
       Add ("terrain", Terrain.Load'Access, Terrain.Save'Access);
       Add ("tiles", Tiles.Load'Access, Tiles.Save'Access);

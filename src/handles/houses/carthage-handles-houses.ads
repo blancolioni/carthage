@@ -74,6 +74,10 @@ package Carthage.Handles.Houses is
       Process : not null access
         procedure (Planet : Planet_Reference));
 
+   procedure Add_Known_Planet
+     (This   : House_Handle;
+      Planet : Planet_Reference);
+
    function Cash
      (This : House_Handle)
       return Carthage.Money.Money_Type;
