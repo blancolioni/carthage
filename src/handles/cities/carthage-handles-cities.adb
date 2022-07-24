@@ -160,20 +160,22 @@ package body Carthage.Handles.Cities is
                 Adjust_Price (Buy_Price, 1.1));
       end Update;
    begin
-      if Quantity /= Carthage.Quantities.Zero then
-         City_Vector.Update (This.Reference, Update'Access);
+      if False then
+         if Quantity /= Carthage.Quantities.Zero then
+            City_Vector.Update (This.Reference, Update'Access);
 
-         This.Log
-           ("price of "
-            & Resource.Tag
-            & " after buying "
-            & Carthage.Quantities.Show (Quantity)
-            & " now "
-            & Carthage.Money.Show (This.Agora_Buys_For (Resource))
-            & " buy, "
-            & Carthage.Money.Show (This.Agora_Sells_For (Resource))
-            & " sell");
+            This.Log
+              ("price of "
+               & Resource.Tag
+               & " after buying "
+               & Carthage.Quantities.Show (Quantity)
+               & " now "
+               & Carthage.Money.Show (This.Agora_Buys_For (Resource))
+               & " buy, "
+               & Carthage.Money.Show (This.Agora_Sells_For (Resource))
+               & " sell");
 
+         end if;
       end if;
    end After_Agora_Buys;
 
@@ -219,8 +221,10 @@ package body Carthage.Handles.Cities is
             & " sell");
       end Update;
    begin
-      if Quantity /= Carthage.Quantities.Zero then
-         City_Vector.Update (This.Reference, Update'Access);
+      if False then
+         if Quantity /= Carthage.Quantities.Zero then
+            City_Vector.Update (This.Reference, Update'Access);
+         end if;
       end if;
    end After_Agora_Sells;
 
