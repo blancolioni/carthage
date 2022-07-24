@@ -64,7 +64,9 @@ package body Carthage.Handles.Stacks is
    overriding function Short_Name
      (Stack : Stack_Handle)
       return String
-   is (Stack.Owner.Tag & "-" & Get (Stack).Identifier);
+   is (Stack.Owner.Tag
+       & "-" & Carthage.Handles.Planets.Get (Stack.Planet).Tag
+       & "-" & Get (Stack).Identifier);
 
    function Has_Assets (This : Stack_Handle) return Boolean
    is (This.Asset_Count > 0);
