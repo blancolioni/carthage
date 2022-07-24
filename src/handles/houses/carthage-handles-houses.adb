@@ -1,6 +1,7 @@
 with Ada.Strings.Unbounded;
 
-with WL.String_Maps;
+with Carthage.Handles.Planets;
+with Carthage.Handles.Resources;
 
 with Carthage.Handles.Vectors;
 
@@ -68,6 +69,12 @@ package body Carthage.Handles.Houses is
        else (raise Constraint_Error with
            "no such house: " & Tag));
 
+   procedure Update_Resource
+     (House    : House_Handle;
+      Planet   : Planet_Reference;
+      Resource : Resource_Reference;
+      Change   : Resource_Record);
+
    type House_Manager_Reference is
      access all House_Manager_Interface'Class;
 
@@ -98,6 +105,22 @@ package body Carthage.Handles.Houses is
    begin
       House_Vector.Update (This.Reference, Update'Access);
    end Add_Known_Planet;
+
+   ----------------------
+   -- Consume_Resource --
+   ----------------------
+
+   procedure Consume_Resource
+     (House    : House_Handle;
+      Planet   : Planet_Reference;
+      Resource : Resource_Reference;
+      Quantity : Carthage.Quantities.Quantity_Type)
+   is
+   begin
+      Update_Resource (House, Planet, Resource,
+                       Resource_Record'
+                         (Consumed => Quantity, others => <>));
+   end Consume_Resource;
 
    ------------
    -- Create --
@@ -195,11 +218,52 @@ package body Carthage.Handles.Houses is
    procedure Log_Status
      (This : House_Handle)
    is
+      Rec : House_Record renames Get (This);
    begin
       This.Log
         ("cash: " & Carthage.Money.Show (Cash (This))
          & "; debt: " & Carthage.Money.Show (Debt (This)));
+      for Planet_Position in Rec.Current_Resources.Iterate loop
+         declare
+            Planet_Tag : constant String :=
+                           Planet_Resource_Maps.Key (Planet_Position);
+         begin
+            for Resource_Position in
+              Rec.Current_Resources (Planet_Position).Iterate
+            loop
+               declare
+                  Resource_Tag : constant String :=
+                                   Resource_Maps.Key (Resource_Position);
+                  Resource_Rec : constant Resource_Record :=
+                                   Resource_Maps.Element (Resource_Position);
+               begin
+                  This.Log
+                    (Planet_Tag & "/" & Resource_Tag
+                     & ": produced "
+                     & Carthage.Quantities.Show (Resource_Rec.Produced)
+                     & "; consumed "
+                     & Carthage.Quantities.Show (Resource_Rec.Consumed));
+               end;
+            end loop;
+         end;
+      end loop;
    end Log_Status;
+
+   ----------------------
+   -- Produce_Resource --
+   ----------------------
+
+   procedure Produce_Resource
+     (House    : House_Handle;
+      Planet   : Planet_Reference;
+      Resource : Resource_Reference;
+      Quantity : Carthage.Quantities.Quantity_Type)
+   is
+   begin
+      Update_Resource (House, Planet, Resource,
+                       Resource_Record'
+                         (Produced => Quantity, others => <>));
+   end Produce_Resource;
 
    ----------
    -- Save --
@@ -211,6 +275,28 @@ package body Carthage.Handles.Houses is
    begin
       House_Vector.Write (Stream);
    end Save;
+
+   ------------------
+   -- Save_History --
+   ------------------
+
+   procedure Save_History (This : House_Handle'Class) is
+
+      procedure Update (Rec : in out House_Record);
+
+      ------------
+      -- Update --
+      ------------
+
+      procedure Update (Rec : in out House_Record) is
+      begin
+         Rec.Resource_History.Append (Rec.Current_Resources);
+         Rec.Current_Resources.Clear;
+      end Update;
+
+   begin
+      House_Vector.Update (This.Reference, Update'Access);
+   end Save_History;
 
    ------------------------
    -- Scan_Known_Planets --
@@ -304,5 +390,54 @@ package body Carthage.Handles.Houses is
    begin
       return Get (This).Treaties (Other.Reference);
    end Treaty_Status_With;
+
+   procedure Update_Resource
+     (House    : House_Handle;
+      Planet   : Planet_Reference;
+      Resource : Resource_Reference;
+      Change   : Resource_Record)
+   is
+      Planet_Tag : constant String :=
+                     Carthage.Handles.Planets.Get (Planet).Tag;
+
+      Resource_Tag : constant String :=
+                       Carthage.Handles.Resources.Get (Resource).Tag;
+
+      procedure Update (Rec : in out House_Record);
+
+      ------------
+      -- Update --
+      ------------
+
+      procedure Update (Rec : in out House_Record) is
+      begin
+         if not Rec.Current_Resources.Contains (Planet_Tag) then
+            Rec.Current_Resources.Insert
+              (Planet_Tag, Resource_Maps.Empty_Map);
+         end if;
+
+         declare
+            use Carthage.Quantities;
+            Resources : Resource_Maps.Map renames
+                          Rec.Current_Resources (Planet_Tag);
+         begin
+            if not Resources.Contains (Resource_Tag) then
+               Resources.Insert
+                 (Resource_Tag, Change);
+            else
+               declare
+                  Res : Resource_Record renames Resources (Resource_Tag);
+               begin
+                  Res.Consumed := Res.Consumed + Change.Consumed;
+                  Res.Produced := Res.Produced + Change.Produced;
+               end;
+            end if;
+         end;
+
+      end Update;
+
+   begin
+      House_Vector.Update (House.Reference, Update'Access);
+   end Update_Resource;
 
 end Carthage.Handles.Houses;

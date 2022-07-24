@@ -49,6 +49,8 @@ package body Carthage.Handles.Cities.Updates is
       end if;
 
       if Have > Zero then
+         City.Owner.Consume_Resource
+           (City.Planet, Resource.Reference, Min (Have, Require));
          City.Remove (Resource, Min (Have, Require));
       end if;
 
@@ -277,7 +279,7 @@ package body Carthage.Handles.Cities.Updates is
                               (Rec.Quantity,
                                Real (City.Health) / 100.0
                                * Real (City.Loyalty) / 100.0
-                               / 30.0);
+                               / 100.0);
             begin
                Harvest.Add (Rec.Resource, Quantity);
             end;
@@ -310,6 +312,9 @@ package body Carthage.Handles.Cities.Updates is
                          & Carthage.Quantities.Show
                            (City.Quantity (Resource)));
             end if;
+
+            City.Owner.Produce_Resource
+              (City.Planet, Resource.Reference, Quantity);
 
             declare
                Message : constant Carthage.Messages.Message_Interface'Class :=

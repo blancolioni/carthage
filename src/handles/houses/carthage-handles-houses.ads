@@ -1,10 +1,12 @@
 private with Ada.Containers.Doubly_Linked_Lists;
 private with WL.Localisation;
+private with WL.String_Maps;
 
 with Ada.Streams;
 
 with Carthage.Colors;
 with Carthage.Money;
+with Carthage.Quantities;
 
 package Carthage.Handles.Houses is
 
@@ -41,6 +43,18 @@ package Carthage.Handles.Houses is
    overriding function Long_Name
      (This : House_Handle)
       return String;
+
+   procedure Produce_Resource
+     (House    : House_Handle;
+      Planet   : Planet_Reference;
+      Resource : Resource_Reference;
+      Quantity : Carthage.Quantities.Quantity_Type);
+
+   procedure Consume_Resource
+     (House    : House_Handle;
+      Planet   : Planet_Reference;
+      Resource : Resource_Reference;
+      Quantity : Carthage.Quantities.Quantity_Type);
 
    type Treaty_Status is (Allied, Neutral, Hostile, War);
 
@@ -173,19 +187,39 @@ private
    package Planet_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Planet_Reference);
 
+   type Resource_Record is
+      record
+         Produced : Carthage.Quantities.Quantity_Type :=
+                      Carthage.Quantities.Zero;
+         Consumed : Carthage.Quantities.Quantity_Type :=
+                      Carthage.Quantities.Zero;
+      end record;
+
+   package Resource_Maps is
+     new WL.String_Maps (Resource_Record);
+
+   package Planet_Resource_Maps is
+     new WL.String_Maps (Resource_Maps.Map, Resource_Maps."=");
+
+   package Resource_History_Lists is
+     new Ada.Containers.Doubly_Linked_Lists
+       (Planet_Resource_Maps.Map, Planet_Resource_Maps."=");
+
    type House_Record is
       record
-         Tag           : Ada.Strings.Unbounded.Unbounded_String;
-         Category      : House_Category;
-         Capital       : Planet_Reference;
-         Tax_Rate      : Unit_Real;
-         Tithe_Skim    : Unit_Real;
-         Unit_Pay      : Unit_Real;
-         Cash          : Carthage.Money.Money_Type;
-         Debt          : Carthage.Money.Money_Type;
-         Color         : Carthage.Colors.Color_Type;
-         Treaties      : House_Treaties := (others => Neutral);
-         Known_Planets : Planet_Lists.List;
+         Tag               : Ada.Strings.Unbounded.Unbounded_String;
+         Category          : House_Category;
+         Capital           : Planet_Reference;
+         Tax_Rate          : Unit_Real;
+         Tithe_Skim        : Unit_Real;
+         Unit_Pay          : Unit_Real;
+         Cash              : Carthage.Money.Money_Type;
+         Debt              : Carthage.Money.Money_Type;
+         Color             : Carthage.Colors.Color_Type;
+         Treaties          : House_Treaties := (others => Neutral);
+         Known_Planets     : Planet_Lists.List;
+         Current_Resources : Planet_Resource_Maps.Map;
+         Resource_History  : Resource_History_Lists.List;
       end record;
 
    function Create (Rec : House_Record) return House_Reference;
@@ -195,5 +229,7 @@ private
       Capital : Planet_Reference)
      with Pre => Handle.Capital = Null_Planet_Reference,
      Post => Handle.Capital = Capital;
+
+   procedure Save_History (This : House_Handle'Class);
 
 end Carthage.Handles.Houses;

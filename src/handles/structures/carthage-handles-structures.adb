@@ -199,6 +199,8 @@ package body Carthage.Handles.Structures is
                     & Carthage.Quantities.Show (Need) & ")");
             end if;
             Can_Proceed := False;
+         else
+            Consumption.Set_Quantity (Resource, Need);
          end if;
       end Check;
 
@@ -223,6 +225,31 @@ package body Carthage.Handles.Structures is
 
       if Can_Proceed then
          Stock.Remove_Stock (Consumption);
+
+         declare
+            procedure Record_Consumption
+              (Resource : Carthage.Handles.Resources.Resource_Handle;
+               Quantity : Carthage.Quantities.Quantity_Type);
+
+            ------------------------
+            -- Record_Consumption --
+            ------------------------
+
+            procedure Record_Consumption
+              (Resource : Carthage.Handles.Resources.Resource_Handle;
+               Quantity : Carthage.Quantities.Quantity_Type)
+            is
+            begin
+               Carthage.Handles.Houses.Get (House)
+                 .Consume_Resource (Carthage.Handles.Tiles.Get (Tile).Planet,
+                                    Resource.Reference,
+                                    Quantity);
+            end Record_Consumption;
+
+         begin
+            Consumption.Scan_Stock (Record_Consumption'Access);
+         end;
+
          declare
             Produced_Quantity : constant Carthage.Quantities.Quantity_Type :=
                                   Carthage.Quantities.Scale
@@ -235,6 +262,11 @@ package body Carthage.Handles.Structures is
                   & Carthage.Quantities.Show (Produced_Quantity)
                   & " " & This.Production_Output.Tag);
             end if;
+
+            Carthage.Handles.Houses.Get (House)
+              .Produce_Resource (Carthage.Handles.Tiles.Get (Tile).Planet,
+                                 This.Production_Output.Reference,
+                                 Produced_Quantity);
             return Produced_Quantity;
          end;
       else
