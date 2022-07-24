@@ -14,6 +14,7 @@ with Carthage.Handles.Structures;
 with Carthage.Handles.Tiles;
 
 with Carthage.Handles.Cities.Updates;
+with Carthage.Handles.Houses.Updates;
 with Carthage.Handles.Stacks.Updates;
 
 with Carthage.Managers.Resources;
@@ -340,6 +341,8 @@ package body Carthage.Updates is
         (Carthage.Handles.Cities.Updates.Execute_City_Consumption'Access);
       Carthage.Handles.Stacks.For_All_Ground_Stacks
         (Carthage.Handles.Stacks.Updates.Consumption'Access);
+      Carthage.Handles.Houses.For_All_Houses
+        (Carthage.Handles.Houses.Updates.Finish_Update'Access);
    end Daily_Update;
 
 end Carthage.Updates;
