@@ -1,6 +1,6 @@
-with Carthage.Goals.Assets;
+--  with Carthage.Goals.Assets;
 
-with Carthage.Handles.Managers;
+--  with Carthage.Handles.Managers;
 with Carthage.Handles.Stacks;
 
 package body Carthage.Handles.Assets.Create is
@@ -36,47 +36,47 @@ package body Carthage.Handles.Assets.Create is
    begin
       Carthage.Handles.Stacks.Get (Stack).Add_Asset (Ref);
 
-      if Unit.Is_Ground_Unit then
-         declare
-            Manager : constant Carthage.Handles.Managers.Manager_Handle :=
-                        Carthage.Handles.Managers.Get_Manager
-                          (Class     => Carthage.Handles.Managers.Ground,
-                           Authority =>
-                             Carthage.Handles.Managers.Asset_Management,
-                           House     => Owner.Reference,
-                           Planet    =>
-                             Carthage.Handles.Stacks.Get (Stack).Planet);
-         begin
-            if Manager.Has_Element then
-               Carthage.Handles.Managers.Add_Pending_Goal
-                 (To_Manager => Manager,
-                  Goal       =>
-                    Carthage.Goals.Assets.Add_Asset_To_Manager
-                      (Ref));
-            end if;
-         end;
-
-         if Unit.Is_Cargo_Pod then
-            declare
-               Manager : constant Carthage.Handles.Managers.Manager_Handle :=
-                           Carthage.Handles.Managers.Get_Manager
-                             (Class     => Handles.Managers.Ground,
-                              Authority =>
-                                Handles.Managers.Resource_Management,
-                              House     => Owner.Reference,
-                              Planet    =>
-                                Carthage.Handles.Stacks.Get (Stack).Planet);
-            begin
-               if Manager.Has_Element then
-                  Carthage.Handles.Managers.Add_Pending_Goal
-                    (To_Manager => Manager,
-                     Goal       =>
-                       Carthage.Goals.Assets.Add_Asset_To_Manager
-                         (Ref));
-               end if;
-            end;
-         end if;
-      end if;
+      --  if Unit.Is_Ground_Unit then
+      --     declare
+      --        Manager : constant Carthage.Handles.Managers.Manager_Handle :=
+      --                    Carthage.Handles.Managers.Get_Manager
+      --                      (Class     => Carthage.Handles.Managers.Ground,
+      --                       Authority =>
+      --                         Carthage.Handles.Managers.Asset_Management,
+      --                       House     => Owner.Reference,
+      --                       Planet    =>
+      --                         Carthage.Handles.Stacks.Get (Stack).Planet);
+      --     begin
+      --        if Manager.Has_Element then
+      --           Carthage.Handles.Managers.Add_Pending_Goal
+      --             (To_Manager => Manager,
+      --              Goal       =>
+      --                Carthage.Goals.Assets.Add_Asset_To_Manager
+      --                  (Ref));
+      --        end if;
+      --     end;
+      --
+      --     if Unit.Is_Cargo_Pod then
+      --        declare
+      --       Manager : constant Carthage.Handles.Managers.Manager_Handle :=
+      --                       Carthage.Handles.Managers.Get_Manager
+      --                         (Class     => Handles.Managers.Ground,
+      --                          Authority =>
+      --                            Handles.Managers.Resource_Management,
+      --                          House     => Owner.Reference,
+      --                          Planet    =>
+      --                         Carthage.Handles.Stacks.Get (Stack).Planet);
+      --        begin
+      --           if Manager.Has_Element then
+      --              Carthage.Handles.Managers.Add_Pending_Goal
+      --                (To_Manager => Manager,
+      --                 Goal       =>
+      --                   Carthage.Goals.Assets.Add_Asset_To_Manager
+      --                     (Ref));
+      --           end if;
+      --        end;
+      --     end if;
+      --  end if;
 
       return Get (Ref);
    end New_Asset;
