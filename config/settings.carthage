@@ -1,0 +1,7 @@
+daily-production-factor = 0.1
+daily-harvest-factor = 0.01
+daily-tax-factor = 0.01
+daily-laboratory-cost = 2
+daily-research-points = 5
+daily-city-food = 0.1
+daily-unit-food-factor = 0.2

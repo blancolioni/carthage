@@ -4,6 +4,8 @@ with Carthage.Handles.Tiles;
 
 with Carthage.Messages.Resources;
 
+with Carthage.Settings;
+
 --  with Carthage.Handles.Houses.Updates;
 
 package body Carthage.Handles.Cities.Updates is
@@ -262,7 +264,7 @@ package body Carthage.Handles.Cities.Updates is
            (Efficiency =>
               Real (City.Loyalty) / 100.0
             * Real (City.Health) / 100.0,
-            Factor     => 0.1);
+            Factor     => Carthage.Settings.Daily_Production_Factor);
       end if;
       Carthage.Handles.Resources.Scan_Stock (City, Report_Stock'Access);
    end Execute_City_Production;
@@ -297,7 +299,7 @@ package body Carthage.Handles.Cities.Updates is
                               (Rec.Quantity,
                                Real (City.Health) / 100.0
                                * Real (City.Loyalty) / 100.0
-                               / 100.0);
+                               * Carthage.Settings.Daily_Harvest_Factor);
             begin
                Harvest.Add (Rec.Resource, Quantity);
             end;

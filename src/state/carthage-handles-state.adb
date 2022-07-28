@@ -4,15 +4,17 @@ with Ada.Streams.Stream_IO;
 with Ada.Text_IO;
 
 --  with Carthage.Options;
+with Carthage.Paths;
 
 with Carthage.Calendar;
+with Carthage.Settings;
 
 with Carthage.Handles.Assets;
 with Carthage.Handles.Cities;
 with Carthage.Handles.Galaxy;
 with Carthage.Handles.Goals;
 with Carthage.Handles.Houses;
-with Carthage.Handles.Managers;
+--  with Carthage.Handles.Managers;
 with Carthage.Handles.Planets;
 with Carthage.Handles.Resources;
 with Carthage.Handles.Stacks;
@@ -65,6 +67,8 @@ package body Carthage.Handles.State is
             Carthage.Calendar.Set_Clock (Clock);
          end;
 
+         Carthage.Settings.Load (S);
+
          for Element of Handle_Classes loop
             Element.Load (S);
          end loop;
@@ -80,6 +84,8 @@ package body Carthage.Handles.State is
    procedure New_State is
    begin
       Current_Identifier := "0AA00AA0";
+      Carthage.Settings.Configure
+        (Carthage.Paths.Config_File ("settings.carthage"));
    end New_State;
 
    ----------------
@@ -100,6 +106,7 @@ package body Carthage.Handles.State is
       begin
          Object_Identifier'Write (S, Current_Identifier);
          Carthage.Calendar.Time'Write (S, Carthage.Calendar.Clock);
+         Carthage.Settings.Save (S);
 
          for Element of Handle_Classes loop
             Element.Save (S);
@@ -161,7 +168,7 @@ begin
       Add ("galaxy", Galaxy.Load'Access, Galaxy.Save'Access);
       Add ("goals", Goals.Load'Access, Goals.Save'Access);
       Add ("houses", Houses.Load'Access, Houses.Save'Access);
-      Add ("managers", Managers.Load'Access, Managers.Save'Access);
+      --  Add ("managers", Managers.Load'Access, Managers.Save'Access);
       Add ("planets", Planets.Load'Access, Planets.Save'Access);
       Add ("stacks", Stacks.Load'Access, Stacks.Save'Access);
       Add ("stocks", Stocks.Load'Access, Stocks.Save'Access);

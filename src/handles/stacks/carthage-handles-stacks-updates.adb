@@ -6,6 +6,8 @@ with Carthage.Handles.Resources;
 
 with Carthage.Messages.Resources;
 
+with Carthage.Settings;
+
 package body Carthage.Handles.Stacks.Updates is
 
    type Stack_Manager is access all Stack_Manager_Interface'Class;
@@ -20,6 +22,10 @@ package body Carthage.Handles.Stacks.Updates is
       Manager : Stack_Manager);
    pragma Unreferenced (Execute_Update);
 
+   -----------------
+   -- Consumption --
+   -----------------
+
    procedure Consumption (Stack : Stack_Handle) is
       use Carthage.Quantities;
       Resource : constant Carthage.Handles.Resources.Resource_Handle :=
@@ -33,7 +39,9 @@ package body Carthage.Handles.Stacks.Updates is
                       Carthage.Handles.Assets.Get (Stack.Asset (I));
          begin
             if Asset.Unit.Eat > Zero then
-               Required := Required + Scale (Asset.Unit.Eat, 0.1);
+               Required := Required
+                 + Scale (Asset.Unit.Eat,
+                          Carthage.Settings.Daily_Unit_Food_Factor);
             end if;
          end;
       end loop;
