@@ -9,18 +9,42 @@ package body Carthage.Messages is
 
    Message_Bank_Map : Message_Bank_Maps.Map;
 
+   type Null_Message_Bank_Instance is
+     new Message_Interface with null record;
+
+   overriding function Tag (This : Null_Message_Bank_Instance) return String
+   is ("null-message");
+
+   overriding function Description
+     (This : Null_Message_Bank_Instance)
+      return String
+   is ("message with no information");
+
    protected body Message_Bank_Type is
+
+      -----------
+      -- Close --
+      -----------
+
+      procedure Close is
+      begin
+         Closing := True;
+      end Close;
 
       ---------
       -- Get --
       ---------
 
       entry Get (Message : out Message_Holders.Holder)
-        when not List.Is_Empty
+        when not List.Is_Empty or else Closing
       is
       begin
-         Message := Message_Holders.To_Holder (List.First_Element);
-         List.Delete_First;
+         if List.Is_Empty then
+            Message := Message_Holders.Empty_Holder;
+         else
+            Message := Message_Holders.To_Holder (List.First_Element);
+            List.Delete_First;
+         end if;
       end Get;
 
       ----------
@@ -33,6 +57,17 @@ package body Carthage.Messages is
       end Send;
 
    end Message_Bank_Type;
+
+   -----------
+   -- Close --
+   -----------
+
+   procedure Close
+     (This : in out Message_Bank)
+   is
+   begin
+      This.Protected_Bank.Close;
+   end Close;
 
    -------------------------
    -- Create_Message_Bank --
@@ -61,9 +96,21 @@ package body Carthage.Messages is
       Message : Message_Holders.Holder;
    begin
       This.Protected_Bank.Get (Message);
-      pragma Assert (not Message.Is_Empty, "received an empty message");
-      return Message.Element;
+      if Message.Is_Empty then
+         return Null_Message;
+      else
+         return Message.Element;
+      end if;
    end Next_Message;
+
+   ------------------
+   -- Null_Message --
+   ------------------
+
+   function Null_Message return Message_Interface'Class is
+   begin
+      return Null_Message_Bank_Instance'(null record);
+   end Null_Message;
 
    ----------
    -- Send --

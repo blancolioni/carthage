@@ -10,6 +10,8 @@ package Carthage.Messages is
 
    procedure Send (This : Message_Interface'Class);
 
+   function Null_Message return Message_Interface'Class;
+
    type Message_Bank is tagged private;
    type Message_Bank_Reference is access all Message_Bank'Class;
 
@@ -20,6 +22,9 @@ package Carthage.Messages is
    function Next_Message
      (This : Message_Bank)
       return Message_Interface'Class;
+
+   procedure Close
+     (This : in out Message_Bank);
 
    function Create_Message_Bank
      (Tag : String)
@@ -37,8 +42,10 @@ private
    protected type Message_Bank_Type is
       procedure Send (Message : Message_Interface'Class);
       entry Get (Message : out Message_Holders.Holder);
+      procedure Close;
    private
-      List : Message_Lists.List;
+      List    : Message_Lists.List;
+      Closing : Boolean := False;
    end Message_Bank_Type;
 
    type Protected_Bank_Access is access all Message_Bank_Type;

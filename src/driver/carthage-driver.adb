@@ -1,5 +1,6 @@
 with Ada.Calendar;
 with Ada.Directories;
+with Ada.Exceptions;
 with Ada.Text_IO;
 
 with WL.Command_Line;
@@ -170,10 +171,12 @@ begin
    end if;
 
 exception
-   when others =>
+   when E : others =>
+      Carthage.Logging.Log ("error: " & Ada.Exceptions.Exception_Message (E));
 
       --  Carthage.Handles.State.Save_State;
 
+      Carthage.Managers.Stop_Managers;
       Carthage.Logging.Stop_Logging;
       raise;
 end Carthage.Driver;

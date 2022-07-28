@@ -23,6 +23,7 @@ private
 
    task type Resource_Manager_Task is
       entry Start (Manager_Ref : Reference);
+      entry Stop;
    end Resource_Manager_Task;
 
    type Task_Reference is access Resource_Manager_Task;

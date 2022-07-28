@@ -249,34 +249,41 @@ package body Carthage.Managers.Resources is
       end Start;
 
       loop
-         declare
-            use Carthage.Messages.Resources;
-            Message : constant Carthage.Messages.Message_Interface'Class :=
-                        Manager.Resource_Bank.Next_Message;
-         begin
-            Manager.Log ("received: " & Message.Description);
-            if Is_Resource_Message (Message) then
-               declare
-                  M : Resource_Message'Class renames
-                        Resource_Message'Class (Message);
-               begin
-                  if M.Is_Resource_Available_Message then
-                     Update_Map (Manager.Supply, M);
-                  elsif M.Is_Resource_Required_Message then
-                     Update_Map (Manager.Requirements, M);
-                  else
-                     Manager.Log ("invalid message: " & M.Tag);
-                  end if;
-                  Manager.Resolve_Resource_Requests;
-               end;
-            else
-               Manager.Log ("expected a resource message: " & Message.Tag);
-            end if;
-         exception
-            when E : others =>
-               Manager.Log ("error: " & Ada.Exceptions.Exception_Message (E));
-         end;
+         select
+            accept Stop;
+            exit;
+         else
+            declare
+               use Carthage.Messages.Resources;
+               Message : constant Carthage.Messages.Message_Interface'Class :=
+                           Manager.Resource_Bank.Next_Message;
+            begin
+               Manager.Log ("received: " & Message.Description);
+               if Is_Resource_Message (Message) then
+                  declare
+                     M : Resource_Message'Class renames
+                           Resource_Message'Class (Message);
+                  begin
+                     if M.Is_Resource_Available_Message then
+                        Update_Map (Manager.Supply, M);
+                     elsif M.Is_Resource_Required_Message then
+                        Update_Map (Manager.Requirements, M);
+                     else
+                        Manager.Log ("invalid message: " & M.Tag);
+                     end if;
+                     Manager.Resolve_Resource_Requests;
+                  end;
+               end if;
+            exception
+               when E : others =>
+                  Manager.Log ("error: "
+                               & Ada.Exceptions.Exception_Message (E));
+            end;
+         end select;
       end loop;
+
+      Manager.Log ("exiting");
+
    end Resource_Manager_Task;
 
    ----------
@@ -285,7 +292,8 @@ package body Carthage.Managers.Resources is
 
    overriding procedure Stop (This : in out Instance) is
    begin
-      abort This.Resource_Task.all;
+      This.Resource_Bank.Close;
+      This.Resource_Task.Stop;
    end Stop;
 
    ----------------
