@@ -27,10 +27,16 @@ package Carthage.Handles.Cities is
       Resource : Carthage.Handles.Resources.Resource_Handle'Class)
       return Carthage.Quantities.Quantity_Type;
 
-   overriding procedure Set_Quantity
+   overriding procedure Add
+     (This           : City_Handle;
+      Resource       : Carthage.Handles.Resources.Resource_Handle'Class;
+      Added_Quantity : Carthage.Quantities.Quantity_Type);
+
+   overriding procedure Take
      (This     : City_Handle;
-      Item     : Carthage.Handles.Resources.Resource_Handle;
-      Quantity : Carthage.Quantities.Quantity_Type);
+      Resource : Carthage.Handles.Resources.Resource_Handle'Class;
+      Quantity : Carthage.Quantities.Quantity_Type;
+      Received : out Carthage.Quantities.Quantity_Type);
 
    function Reference
      (Handle : City_Handle)
@@ -254,5 +260,10 @@ private
      (City : City_Handle'Class;
       Process : not null access
         procedure (Order : City_Order_Record));
+
+   procedure Update_City_Record
+     (This : City_Handle'Class;
+      Update : not null access
+        procedure (City : in out City_Record));
 
 end Carthage.Handles.Cities;

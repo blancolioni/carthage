@@ -42,18 +42,24 @@ package body Carthage.Handles.Resources is
    -- Add --
    ---------
 
-   procedure Add
-     (Stock          : in out Stock_Interface'Class;
-      Resource       : Resource_Handle;
+   overriding procedure Add
+     (Stock          : in out Resource_Stock;
+      Resource       : Resource_Handle'Class;
       Added_Quantity : Carthage.Quantities.Quantity_Type)
    is
       use Carthage.Quantities;
-      Current : constant Quantity_Type :=
-                  Stock.Quantity (Resource);
-      Updated : constant Quantity_Type :=
-                  Current + Added_Quantity;
+      use Quantity_Maps;
+      Position : constant Cursor := Stock.Map.Find (Resource.Tag);
    begin
-      Stock.Set_Quantity (Resource, Updated);
+      if Has_Element (Position) then
+         declare
+            Quantity : Quantity_Type renames Stock.Map (Position);
+         begin
+            Quantity := Quantity + Added_Quantity;
+         end;
+      else
+         Stock.Map.Insert (Resource.Tag, Added_Quantity);
+      end if;
    end Add;
 
    ---------
@@ -107,7 +113,19 @@ package body Carthage.Handles.Resources is
    is
    begin
       for Reference in 1 .. Resource_Vector.Last_Index loop
-         Stock.Set_Quantity (Get (Reference), Carthage.Quantities.Zero);
+         declare
+            use type Carthage.Quantities.Quantity_Type;
+            Quantity : constant Carthage.Quantities.Quantity_Type :=
+                         Stock.Quantity (Get (Reference));
+         begin
+            if Quantity > Carthage.Quantities.Zero then
+               declare
+                  Taken : Carthage.Quantities.Quantity_Type with Unreferenced;
+               begin
+                  Stock.Take (Get (Reference), Quantity, Taken);
+               end;
+            end if;
+         end;
       end loop;
    end Clear_Stock;
 
@@ -211,35 +229,6 @@ package body Carthage.Handles.Resources is
       end if;
    end Quantity;
 
-   ------------
-   -- Remove --
-   ------------
-
-   procedure Remove
-     (Stock            : in out Stock_Interface'Class;
-      Resource         : Resource_Handle;
-      Removed_Quantity : Carthage.Quantities.Quantity_Type)
-   is
-      use type Carthage.Quantities.Quantity_Type;
-   begin
-      Stock.Set_Quantity
-        (Resource, Quantity (Stock, Resource) - Removed_Quantity);
-   end Remove;
-
-   ------------
-   -- Remove --
-   ------------
-
-   procedure Remove
-     (Stock            : in out Stock_Interface'Class;
-      Resource         : Resource_Handle;
-      Removed_Quantity : Natural)
-   is
-   begin
-      Stock.Remove (Resource,
-                    Carthage.Quantities.To_Quantity (Removed_Quantity));
-   end Remove;
-
    ------------------
    -- Remove_Stock --
    ------------------
@@ -260,8 +249,9 @@ package body Carthage.Handles.Resources is
         (Resource : Resource_Handle;
          Quantity : Carthage.Quantities.Quantity_Type)
       is
+         Taken : Carthage.Quantities.Quantity_Type with Unreferenced;
       begin
-         From.Remove (Resource, Quantity);
+         From.Take (Resource, Quantity, Taken);
       end Move;
 
    begin
@@ -304,27 +294,30 @@ package body Carthage.Handles.Resources is
       end loop;
    end Scan_Stock;
 
-   ------------------
-   -- Set_Quantity --
-   ------------------
+   ----------
+   -- Take --
+   ----------
 
-   overriding procedure Set_Quantity
-     (Stock        : in out Resource_Stock;
-      Resource     : Resource_Handle'Class;
-      New_Quantity : Carthage.Quantities.Quantity_Type)
+   overriding procedure Take
+     (Stock    : in out Resource_Stock;
+      Resource : Resource_Handle'Class;
+      Quantity : Carthage.Quantities.Quantity_Type;
+      Received : out Carthage.Quantities.Quantity_Type)
    is
       use Carthage.Quantities;
-      Tag : constant String := Resource.Tag;
+      use Quantity_Maps;
+      Position : constant Cursor := Stock.Map.Find (Resource.Tag);
    begin
-      if Stock.Map.Contains (Tag) then
-         if New_Quantity = Zero then
-            Stock.Map.Delete (Tag);
-         else
-            Stock.Map.Replace (Tag, New_Quantity);
-         end if;
-      elsif New_Quantity > Zero then
-         Stock.Map.Insert (Tag, New_Quantity);
+      if Has_Element (Position) then
+         declare
+            Available : Quantity_Type renames Stock.Map (Position);
+         begin
+            Received := Min (Quantity, Available);
+            Available := Available - Received;
+         end;
+      else
+         Received := Carthage.Quantities.Zero;
       end if;
-   end Set_Quantity;
+   end Take;
 
 end Carthage.Handles.Resources;

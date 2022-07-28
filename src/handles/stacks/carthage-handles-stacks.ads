@@ -48,10 +48,16 @@ package Carthage.Handles.Stacks is
       Resource : Carthage.Handles.Resources.Resource_Handle'Class)
       return Carthage.Quantities.Quantity_Type;
 
-   overriding procedure Set_Quantity
+   overriding procedure Add
+     (This           : Stack_Handle;
+      Resource       : Carthage.Handles.Resources.Resource_Handle'Class;
+      Added_Quantity : Carthage.Quantities.Quantity_Type);
+
+   overriding procedure Take
      (This     : Stack_Handle;
-      Item     : Carthage.Handles.Resources.Resource_Handle;
-      Quantity : Carthage.Quantities.Quantity_Type);
+      Resource : Carthage.Handles.Resources.Resource_Handle'Class;
+      Quantity : Carthage.Quantities.Quantity_Type;
+      Received : out Carthage.Quantities.Quantity_Type);
 
    function Reference
      (Handle : Stack_Handle)

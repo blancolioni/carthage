@@ -1,4 +1,5 @@
 with Ada.Containers.Doubly_Linked_Lists;
+--  with Ada.Exceptions;
 with Ada.Strings.Fixed;
 
 with Carthage.Handles.Assets;
@@ -97,12 +98,38 @@ package body Carthage.Handles.Tiles is
       Resource : Carthage.Handles.Resources.Resource_Handle;
       Quantity : Carthage.Quantities.Quantity_Type)
    is
-      use type Carthage.Quantities.Quantity_Type;
+      use Carthage.Quantities;
+      Stack     : Carthage.Handles.Stacks.Stack_Handle;
    begin
-      Tile.Set_Resource_Quantity
-        (Owner    => Owner,
-         Resource => Resource,
-         Quantity => Tile.Resource_Quantity (Owner, Resource) + Quantity);
+      for Reference of Get_Variable (Tile).Stacks loop
+         declare
+            Handle : constant Carthage.Handles.Stacks.Stack_Handle :=
+                       Carthage.Handles.Stacks.Get (Reference);
+         begin
+            if Handle.Owner.Reference = Owner.Reference then
+               if Handle.Quantity (Resource) > Zero then
+                  Stack := Handle;
+                  exit;
+               end if;
+
+               if not Stack.Has_Element then
+                  Stack := Handle;
+               end if;
+
+            end if;
+         end;
+      end loop;
+
+      if not Stack.Has_Element then
+         Stack := Carthage.Handles.Stacks.Create.New_Ground_Stack
+           (Manager => null,
+            Owner   => Owner,
+            Planet  => Tile.Planet,
+            Tile    => Tile);
+      end if;
+
+      Stack.Add (Resource, Quantity);
+
    end Add_Resource;
 
    ---------------
@@ -313,24 +340,6 @@ package body Carthage.Handles.Tiles is
       Variable_Tile_Vector.Read (Stream);
    end Load;
 
-   ---------------------
-   -- Remove_Resource --
-   ---------------------
-
-   procedure Remove_Resource
-     (Tile     : Tile_Handle;
-      Owner    : Carthage.Handles.Houses.House_Handle;
-      Resource : Carthage.Handles.Resources.Resource_Handle;
-      Quantity : Carthage.Quantities.Quantity_Type)
-   is
-      use type Carthage.Quantities.Quantity_Type;
-   begin
-      Tile.Set_Resource_Quantity
-        (Owner    => Owner,
-         Resource => Resource,
-         Quantity => Tile.Resource_Quantity (Owner, Resource) - Quantity);
-   end Remove_Resource;
-
    ------------------
    -- Remove_Stack --
    ------------------
@@ -517,50 +526,6 @@ package body Carthage.Handles.Tiles is
       Variable_Tile_Vector.Update (This.Reference, Update'Access);
    end Set_Explored_By;
 
-   ---------------------------
-   -- Set_Resource_Quantity --
-   ---------------------------
-
-   procedure Set_Resource_Quantity
-     (Tile     : Tile_Handle;
-      Owner    : Carthage.Handles.Houses.House_Handle;
-      Resource : Carthage.Handles.Resources.Resource_Handle;
-      Quantity : Carthage.Quantities.Quantity_Type)
-   is
-      use Carthage.Quantities;
-      Stack     : Carthage.Handles.Stacks.Stack_Handle;
-   begin
-      for Reference of Get_Variable (Tile).Stacks loop
-         declare
-            Handle : constant Carthage.Handles.Stacks.Stack_Handle :=
-                       Carthage.Handles.Stacks.Get (Reference);
-         begin
-            if Handle.Owner.Reference = Owner.Reference then
-               if Handle.Quantity (Resource) > Zero then
-                  Stack := Handle;
-                  exit;
-               end if;
-
-               if not Stack.Has_Element then
-                  Stack := Handle;
-               end if;
-
-            end if;
-         end;
-      end loop;
-
-      if not Stack.Has_Element then
-         Stack := Carthage.Handles.Stacks.Create.New_Ground_Stack
-           (Manager => null,
-            Owner   => Owner,
-            Planet  => Tile.Planet,
-            Tile    => Tile);
-      end if;
-
-      Stack.Set_Quantity (Resource, Quantity);
-
-   end Set_Resource_Quantity;
-
    --------------
    -- Set_Road --
    --------------
@@ -606,6 +571,47 @@ package body Carthage.Handles.Tiles is
    begin
       Variable_Tile_Vector.Update (This.Reference, Update'Access);
    end Set_Seen_By;
+
+   -------------------
+   -- Take_Resource --
+   -------------------
+
+   procedure Take_Resource
+     (Tile      : Tile_Handle;
+      Owner     : Carthage.Handles.Houses.House_Handle;
+      Resource  : Carthage.Handles.Resources.Resource_Handle;
+      Quantity  : Carthage.Quantities.Quantity_Type;
+      Received  : out Carthage.Quantities.Quantity_Type)
+   is
+      use Carthage.Quantities;
+      Stack     : Carthage.Handles.Stacks.Stack_Handle;
+   begin
+      for Reference of Get_Variable (Tile).Stacks loop
+         declare
+            Handle : constant Carthage.Handles.Stacks.Stack_Handle :=
+                       Carthage.Handles.Stacks.Get (Reference);
+         begin
+            if Handle.Owner.Reference = Owner.Reference then
+               if Handle.Quantity (Resource) > Zero then
+                  Stack := Handle;
+                  exit;
+               end if;
+
+               if not Stack.Has_Element then
+                  Stack := Handle;
+               end if;
+
+            end if;
+         end;
+      end loop;
+
+      if Stack.Has_Element then
+         Stack.Take (Resource, Quantity, Received);
+      else
+         Received := Carthage.Quantities.Zero;
+      end if;
+
+   end Take_Resource;
 
    -------------
    -- Terrain --

@@ -28,14 +28,24 @@ package body Carthage.Handles.Stocks is
    -- Add --
    ---------
 
-   procedure Add
-     (This     : Stock_Handle_Interface'Class;
-      Item     : Carthage.Handles.Resources.Resource_Handle;
-      Quantity : Carthage.Quantities.Quantity_Type)
+   overriding procedure Add
+     (Stock          : Stock_Handle;
+      Resource       : Carthage.Handles.Resources.Resource_Handle'Class;
+      Added_Quantity : Carthage.Quantities.Quantity_Type)
    is
-      use type Carthage.Quantities.Quantity_Type;
+      procedure Update (Rec : in out Stock_Record);
+
+      ------------
+      -- Update --
+      ------------
+
+      procedure Update (Rec : in out Stock_Record) is
+      begin
+         Rec.Stock.Add (Resource, Added_Quantity);
+      end Update;
+
    begin
-      This.Set_Quantity (Item, This.Quantity (Item) + Quantity);
+      Stock_Vector.Update (Stock.Reference, Update'Access);
    end Add;
 
    ------------------
@@ -63,19 +73,9 @@ package body Carthage.Handles.Stocks is
       Stock_Vector.Read (Stream);
    end Load;
 
-   ------------
-   -- Remove --
-   ------------
-
-   procedure Remove
-     (This     : Stock_Handle_Interface'Class;
-      Item     : Carthage.Handles.Resources.Resource_Handle;
-      Quantity : Carthage.Quantities.Quantity_Type)
-   is
-      use type Carthage.Quantities.Quantity_Type;
-   begin
-      This.Set_Quantity (Item, This.Quantity (Item) - Quantity);
-   end Remove;
+   ------------------
+   -- Remove_Stock --
+   ------------------
 
    procedure Remove_Stock
      (From  : Stock_Handle_Interface'Class;
@@ -91,8 +91,9 @@ package body Carthage.Handles.Stocks is
       procedure Go (Resource : Carthage.Handles.Resources.Resource_Handle;
                     Quantity : Carthage.Quantities.Quantity_Type)
       is
+         Taken : Carthage.Quantities.Quantity_Type with Unreferenced;
       begin
-         From.Remove (Resource, Quantity);
+         From.Take (Resource, Quantity, Taken);
       end Go;
 
    begin
@@ -110,14 +111,15 @@ package body Carthage.Handles.Stocks is
       Stock_Vector.Write (Stream);
    end Save;
 
-   ------------------
-   -- Set_Quantity --
-   ------------------
+   ----------
+   -- Take --
+   ----------
 
-   overriding procedure Set_Quantity
-     (This     : Stock_Handle;
-      Item     : Carthage.Handles.Resources.Resource_Handle;
-      Quantity : Carthage.Quantities.Quantity_Type)
+   overriding procedure Take
+     (Stock    : Stock_Handle;
+      Resource : Carthage.Handles.Resources.Resource_Handle'Class;
+      Quantity : Carthage.Quantities.Quantity_Type;
+      Received : out Carthage.Quantities.Quantity_Type)
    is
 
       procedure Update (Rec : in out Stock_Record);
@@ -128,11 +130,11 @@ package body Carthage.Handles.Stocks is
 
       procedure Update (Rec : in out Stock_Record) is
       begin
-         Rec.Stock.Set_Quantity (Item, Quantity);
+         Rec.Stock.Take (Resource, Quantity, Received);
       end Update;
 
    begin
-      Stock_Vector.Update (This.Reference, Update'Access);
-   end Set_Quantity;
+      Stock_Vector.Update (Stock.Reference, Update'Access);
+   end Take;
 
 end Carthage.Handles.Stocks;

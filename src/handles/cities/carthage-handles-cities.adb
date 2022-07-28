@@ -104,6 +104,22 @@ package body Carthage.Handles.Cities is
      (City      : City_Handle;
       Order     : City_Order_Record);
 
+   ---------
+   -- Add --
+   ---------
+
+   overriding procedure Add
+     (This           : City_Handle;
+      Resource       : Carthage.Handles.Resources.Resource_Handle'Class;
+      Added_Quantity : Carthage.Quantities.Quantity_Type)
+   is
+   begin
+      Carthage.Handles.Tiles.Get (This.Tile)
+        .Add_Resource
+          (This.Owner, Carthage.Handles.Resources.Resource_Handle (Resource),
+           Added_Quantity);
+   end Add;
+
    ---------------
    -- Add_Order --
    ---------------
@@ -579,20 +595,6 @@ package body Carthage.Handles.Cities is
       null;
    end Set_Manager;
 
-   ------------------
-   -- Set_Quantity --
-   ------------------
-
-   overriding procedure Set_Quantity
-     (This     : City_Handle;
-      Item     : Carthage.Handles.Resources.Resource_Handle;
-      Quantity : Carthage.Quantities.Quantity_Type)
-   is
-   begin
-      Carthage.Handles.Tiles.Get (This.Tile)
-        .Set_Resource_Quantity (This.Owner, Item, Quantity);
-   end Set_Quantity;
-
    -----------------
    -- Set_Seen_By --
    -----------------
@@ -615,5 +617,35 @@ package body Carthage.Handles.Cities is
    begin
       City_Vector.Update (This.Reference, Update'Access);
    end Set_Seen_By;
+
+   ----------
+   -- Take --
+   ----------
+
+   overriding procedure Take
+     (This     : City_Handle;
+      Resource : Carthage.Handles.Resources.Resource_Handle'Class;
+      Quantity : Carthage.Quantities.Quantity_Type;
+      Received : out Carthage.Quantities.Quantity_Type)
+   is
+   begin
+      Carthage.Handles.Tiles.Get (This.Tile)
+        .Take_Resource
+          (This.Owner, Carthage.Handles.Resources.Resource_Handle (Resource),
+           Quantity, Received);
+   end Take;
+
+   ------------------------
+   -- Update_City_Record --
+   ------------------------
+
+   procedure Update_City_Record
+     (This   : City_Handle'Class;
+      Update : not null access
+        procedure (City : in out City_Record))
+   is
+   begin
+      City_Vector.Update (This.Reference, Update);
+   end Update_City_Record;
 
 end Carthage.Handles.Cities;

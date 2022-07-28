@@ -1,4 +1,5 @@
 with Ada.Containers.Doubly_Linked_Lists;
+with Ada.Exceptions;
 
 with Carthage.Handles.Cities;
 with Carthage.Handles.Resources;
@@ -134,10 +135,15 @@ package body Carthage.Managers.Resources is
                            Supply (Route.Supply);
                Quantity : constant Quantity_Type :=
                             Min (Required.Quantity, Supplied.Quantity);
+               Actual   : Quantity_Type;
+
             begin
+
+               From.Take_Resource (This.House, Resource, Quantity, Actual);
+
                if Quantity > Zero then
                   This.Log
-                    ("ship " & Show (Quantity) & " " & Resource.Tag
+                    ("ship " & Show (Actual) & " " & Resource.Tag
                      & " from "
                      & Position_Image (From.Position)
                      & " to "
@@ -147,14 +153,16 @@ package body Carthage.Managers.Resources is
                      & "; required " & Show (Required.Quantity)
                      & "; available " & Show (Supplied.Quantity));
 
-                  From.Remove_Resource (This.House, Resource, Quantity);
-                  Supplied.Quantity := @ - Quantity;
-                  Supplied.Fulfilled := @ + Quantity;
+                  Supplied.Quantity := @ - Actual;
+                  Supplied.Fulfilled := @ + Actual;
 
-                  To.Add_Resource (This.House, Resource, Quantity);
-                  Required.Quantity := @ - Quantity;
-                  Required.Fulfilled := @ + Quantity;
+                  To.Add_Resource (This.House, Resource, Actual);
+                  Required.Quantity := @ - Actual;
+                  Required.Fulfilled := @ + Actual;
                end if;
+            exception
+               when E : others =>
+                  This.Log ("error: " & Ada.Exceptions.Exception_Message (E));
             end;
          end loop;
 
@@ -179,23 +187,27 @@ package body Carthage.Managers.Resources is
                            Price : constant Carthage.Money.Price_Type :=
                                      City.Agora.Agora_Buys_For
                                        (Resource);
-                           Quantity : constant Quantity_Type :=
-                                        Min (Rec.Minimum - Rec.Fulfilled,
-                                             City.Agora.Quantity (Resource));
+                           Wanted : constant Quantity_Type :=
+                                      Rec.Minimum - Rec.Fulfilled;
+                           Quantity : Quantity_Type;
                         begin
-                           City.Agora.Log
-                             ("have "
-                              & Show (City.Agora.Quantity (Resource))
-                              & " " & Resource.Tag);
+                           City.Agora.Take (Resource, Wanted, Quantity);
+
                            if Quantity > Zero then
+                              This.House.Log
+                                ("buy " & Show (Quantity)
+                                 & " " & Resource.Tag
+                                 & " from " & City.Agora.Short_Name
+                                 & " for "
+                                 & Carthage.Money.Show
+                                   (Carthage.Money.Total (Price, Quantity)));
+
                               This.House.Spend
                                 (Carthage.Money.Total (Price, Quantity));
                               City.Agora.Owner.Earn
                                 (Carthage.Money.Total (Price, Quantity));
                               Tile.Add_Resource
                                 (This.House, Resource, Quantity);
-                              City.Agora.Remove
-                                (Resource, Quantity);
                               City.Agora.After_Agora_Sells
                                 (Resource, Quantity);
                            end if;
@@ -260,6 +272,9 @@ package body Carthage.Managers.Resources is
             else
                Manager.Log ("expected a resource message: " & Message.Tag);
             end if;
+         exception
+            when E : others =>
+               Manager.Log ("error: " & Ada.Exceptions.Exception_Message (E));
          end;
       end loop;
    end Resource_Manager_Task;

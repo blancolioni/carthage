@@ -336,9 +336,14 @@ package body Carthage.Handles.Assets is
       return Cost;
    end Movement_Cost;
 
+   ---------------------
+   -- Remove_Quantity --
+   ---------------------
+
    procedure Remove_Quantity
      (This     : Asset_Handle;
-      Quantity : Carthage.Quantities.Quantity_Type)
+      Quantity : Carthage.Quantities.Quantity_Type;
+      Received : out Carthage.Quantities.Quantity_Type)
    is
 
       procedure Update (Rec : in out Asset_Record);
@@ -348,9 +353,10 @@ package body Carthage.Handles.Assets is
       ------------
 
       procedure Update (Rec : in out Asset_Record) is
-         use type Carthage.Quantities.Quantity_Type;
+         use Carthage.Quantities;
       begin
-         Rec.Quantity := Rec.Quantity - Quantity;
+         Received := Min (Quantity, Rec.Quantity);
+         Rec.Quantity := Rec.Quantity - Received;
       end Update;
 
    begin

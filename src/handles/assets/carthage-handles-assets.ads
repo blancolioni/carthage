@@ -64,10 +64,9 @@ package Carthage.Handles.Assets is
 
    procedure Remove_Quantity
      (This     : Asset_Handle;
-      Quantity : Carthage.Quantities.Quantity_Type)
-     with Pre => This.Resource_Cargo.Has_Element
-     and then Carthage.Quantities."<="
-       (Quantity, This.Resource_Quantity);
+      Quantity : Carthage.Quantities.Quantity_Type;
+      Received : out Carthage.Quantities.Quantity_Type)
+     with Pre => This.Resource_Cargo.Has_Element;
 
    function Unit
      (Asset : Asset_Handle)

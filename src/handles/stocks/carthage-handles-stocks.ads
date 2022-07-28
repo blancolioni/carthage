@@ -11,24 +11,18 @@ package Carthage.Handles.Stocks is
    type Stock_Handle_Interface is interface
      and Carthage.Handles.Resources.Stock_Reader_Interface;
 
-   procedure Set_Quantity
-     (This     : Stock_Handle_Interface;
-      Item     : Carthage.Handles.Resources.Resource_Handle;
-      Quantity : Carthage.Quantities.Quantity_Type)
-   is abstract
-     with Post'Class => Carthage.Quantities."="
-       (This.Quantity (Item), Quantity);
-
    procedure Add
-     (This     : Stock_Handle_Interface'Class;
-      Item     : Carthage.Handles.Resources.Resource_Handle;
-      Quantity : Carthage.Quantities.Quantity_Type);
+     (Stock          : Stock_Handle_Interface;
+      Resource       : Carthage.Handles.Resources.Resource_Handle'Class;
+      Added_Quantity : Carthage.Quantities.Quantity_Type)
+   is abstract;
 
-   procedure Remove
-     (This     : Stock_Handle_Interface'Class;
-      Item     : Carthage.Handles.Resources.Resource_Handle;
-      Quantity : Carthage.Quantities.Quantity_Type)
-     with Pre => Carthage.Quantities."<=" (Quantity, This.Quantity (Item));
+   procedure Take
+     (Stock    : Stock_Handle_Interface;
+      Resource : Carthage.Handles.Resources.Resource_Handle'Class;
+      Quantity : Carthage.Quantities.Quantity_Type;
+      Received : out Carthage.Quantities.Quantity_Type)
+   is abstract;
 
    procedure Remove_Stock
      (From  : Stock_Handle_Interface'Class;
@@ -44,10 +38,16 @@ package Carthage.Handles.Stocks is
       Resource : Carthage.Handles.Resources.Resource_Handle'Class)
       return Carthage.Quantities.Quantity_Type;
 
-   overriding procedure Set_Quantity
-     (This     : Stock_Handle;
-      Item     : Carthage.Handles.Resources.Resource_Handle;
-      Quantity : Carthage.Quantities.Quantity_Type);
+   overriding procedure Add
+     (Stock          : Stock_Handle;
+      Resource       : Carthage.Handles.Resources.Resource_Handle'Class;
+      Added_Quantity : Carthage.Quantities.Quantity_Type);
+
+   overriding procedure Take
+     (Stock    : Stock_Handle;
+      Resource : Carthage.Handles.Resources.Resource_Handle'Class;
+      Quantity : Carthage.Quantities.Quantity_Type;
+      Received : out Carthage.Quantities.Quantity_Type);
 
    function Reference (Handle : Stock_Handle) return Stock_Reference;
    function Get (Reference : Stock_Reference) return Stock_Handle;

@@ -41,12 +41,6 @@ package Carthage.Handles.Resources is
 
    type Stock_Interface is interface and Stock_Reader_Interface;
 
-   procedure Set_Quantity
-     (Stock        : in out Stock_Interface;
-      Resource     : Resource_Handle'Class;
-      New_Quantity : Carthage.Quantities.Quantity_Type)
-   is abstract;
-
    function Whole_Quantity
      (Stock    : Stock_Reader_Interface'Class;
       Resource : Resource_Handle'Class)
@@ -60,27 +54,22 @@ package Carthage.Handles.Resources is
      (Stock    : in out Stock_Interface'Class);
 
    procedure Add
-     (Stock    : in out Stock_Interface'Class;
-      Resource       : Resource_Handle;
-      Added_Quantity : Carthage.Quantities.Quantity_Type);
+     (Stock          : in out Stock_Interface;
+      Resource       : Resource_Handle'Class;
+      Added_Quantity : Carthage.Quantities.Quantity_Type)
+   is abstract;
 
    procedure Add
      (Stock          : in out Stock_Interface'Class;
       Resource       : Resource_Handle;
       Added_Quantity : Natural);
 
-   procedure Remove
-     (Stock            : in out Stock_Interface'Class;
-      Resource         : Resource_Handle;
-      Removed_Quantity : Carthage.Quantities.Quantity_Type)
-     with Pre =>
-       Carthage.Quantities."<="
-         (Removed_Quantity, Stock.Quantity (Resource));
-
-   procedure Remove
-     (Stock            : in out Stock_Interface'Class;
-      Resource         : Resource_Handle;
-      Removed_Quantity : Natural);
+   procedure Take
+     (Stock    : in out Stock_Interface;
+      Resource : Resource_Handle'Class;
+      Quantity : Carthage.Quantities.Quantity_Type;
+      Received : out Carthage.Quantities.Quantity_Type)
+   is abstract;
 
    procedure Scan_Stock
      (Stock    : Stock_Reader_Interface'Class;
@@ -103,10 +92,16 @@ package Carthage.Handles.Resources is
       Resource : Resource_Handle'Class)
       return Carthage.Quantities.Quantity_Type;
 
-   overriding procedure Set_Quantity
-     (Stock        : in out Resource_Stock;
-      Resource     : Resource_Handle'Class;
-      New_Quantity : Carthage.Quantities.Quantity_Type);
+   overriding procedure Add
+     (Stock          : in out Resource_Stock;
+      Resource       : Resource_Handle'Class;
+      Added_Quantity : Carthage.Quantities.Quantity_Type);
+
+   overriding procedure Take
+     (Stock    : in out Resource_Stock;
+      Resource : Resource_Handle'Class;
+      Quantity : Carthage.Quantities.Quantity_Type;
+      Received : out Carthage.Quantities.Quantity_Type);
 
    procedure Load
      (Stream : not null access Ada.Streams.Root_Stream_Type'Class);

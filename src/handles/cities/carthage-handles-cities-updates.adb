@@ -17,43 +17,61 @@ package body Carthage.Handles.Cities.Updates is
    procedure Execute_City_Consumption
      (City : City_Handle)
    is
-      use Carthage.Quantities;
-      Resource : constant Carthage.Handles.Resources.Resource_Handle :=
-                   Carthage.Handles.Resources.Food;
-      Require  : constant Quantity_Type := To_Quantity (0.1);
-      Like     : constant Quantity_Type := To_Quantity (1.0);
-      Minimum  : constant Quantity_Type := To_Quantity (0.5);
-      Have     : constant Quantity_Type := City.Quantity (Resource);
-      Need     : constant Quantity_Type :=
-                   (if Have < Require then Require - Have else Zero);
+
+      procedure Execute (Rec : in out City_Record);
+
+      -------------
+      -- Execute --
+      -------------
+
+      procedure Execute (Rec : in out City_Record) is
+         use Carthage.Quantities;
+         Resource : constant Carthage.Handles.Resources.Resource_Handle :=
+                      Carthage.Handles.Resources.Food;
+         Tile     : constant Carthage.Handles.Tiles.Tile_Handle :=
+                      Carthage.Handles.Tiles.Get (Rec.Tile);
+         House    : constant Carthage.Handles.Houses.House_Handle :=
+                      Carthage.Handles.Houses.Get (Rec.Owner);
+         Require  : constant Quantity_Type :=
+                      Carthage.Settings.Daily_City_Food;
+         Like     : constant Quantity_Type := Scale (Require, 10.0);
+         Minimum  : constant Quantity_Type := Scale (Require, 5.0);
+         Have     : Quantity_Type;
+         Need     : Quantity_Type;
+      begin
+
+         Tile.Take_Resource (House, Resource, Require, Have);
+         Need := (if Have < Require then Require - Have else Zero);
+
+         Tile.Log
+           ("food: require " & Show (Require)
+            & "; want " & Show (Like)
+            & "; have " & Show (Have)
+            & "; need " & Show (Need));
+
+         if Have > Zero then
+            City.Owner.Consume_Resource
+              (City.Planet, Resource.Reference, Have);
+         end if;
+
+         if Have < Minimum then
+            Tile.Log ("requesting " & Show (Like - Have) & " food");
+            declare
+               Message : constant Carthage.Messages.Message_Interface'Class :=
+                           Carthage.Messages.Resources.Required
+                             (House    => House,
+                              Tile     => Tile,
+                              Resource => Resource,
+                              Quantity => Like - Have,
+                              Minimum  => Need);
+            begin
+               Message.Send;
+            end;
+         end if;
+      end Execute;
+
    begin
-
-      City.Log ("food: require " & Show (Require)
-                & "; want " & Show (Like)
-                & "; have " & Show (Have)
-                & "; need " & Show (Need));
-
-      if Have < Minimum then
-         City.Log ("requesting " & Show (Like - Have) & " food");
-         declare
-            Message : constant Carthage.Messages.Message_Interface'Class :=
-                        Carthage.Messages.Resources.Required
-                          (House    => City.Owner,
-                           Tile     => Carthage.Handles.Tiles.Get (City.Tile),
-                           Resource => Resource,
-                           Quantity => Like - Have,
-                           Minimum  => Need);
-         begin
-            Message.Send;
-         end;
-      end if;
-
-      if Have > Zero then
-         City.Owner.Consume_Resource
-           (City.Planet, Resource.Reference, Min (Have, Require));
-         City.Remove (Resource, Min (Have, Require));
-      end if;
-
+      Update_City_Record (City, Execute'Access);
    end Execute_City_Consumption;
 
    -------------------------

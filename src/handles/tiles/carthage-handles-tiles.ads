@@ -29,23 +29,18 @@ package Carthage.Handles.Tiles is
       Resource : Carthage.Handles.Resources.Resource_Handle'Class)
       return Carthage.Quantities.Quantity_Type;
 
-   procedure Set_Resource_Quantity
-     (Tile     : Tile_Handle;
-      Owner    : Carthage.Handles.Houses.House_Handle;
-      Resource : Carthage.Handles.Resources.Resource_Handle;
-      Quantity : Carthage.Quantities.Quantity_Type);
-
    procedure Add_Resource
      (Tile     : Tile_Handle;
       Owner    : Carthage.Handles.Houses.House_Handle;
       Resource : Carthage.Handles.Resources.Resource_Handle;
       Quantity : Carthage.Quantities.Quantity_Type);
 
-   procedure Remove_Resource
+   procedure Take_Resource
      (Tile     : Tile_Handle;
       Owner    : Carthage.Handles.Houses.House_Handle;
       Resource : Carthage.Handles.Resources.Resource_Handle;
-      Quantity : Carthage.Quantities.Quantity_Type);
+      Quantity : Carthage.Quantities.Quantity_Type;
+      Received : out Carthage.Quantities.Quantity_Type);
 
    subtype Terrain_Layer is Positive range 1 .. 3;
 

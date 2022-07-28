@@ -42,12 +42,15 @@ package body Carthage.Handles.Stacks.Updates is
          declare
             Minimum : constant Quantity_Type := Scale (Required, 5.0);
             Like    : constant Quantity_Type := Scale (Minimum, 2.0);
-            Consume : constant Quantity_Type := Min (Required, Available);
+            Consume : Quantity_Type;
          begin
+            Stack.Take (Resource, Required, Consume);
+
             Stack.Log ("food: require " & Show (Required)
                        & "; available " & Show (Available)
                        & "; minimum " & Show (Minimum)
-                       & "; like " & Show (Like));
+                       & "; like " & Show (Like)
+                       & "; consumed " & Show (Consume));
             if Available < Minimum then
                Stack.Log ("requesting " & Show (Like - Available) & " food");
                declare
@@ -61,10 +64,6 @@ package body Carthage.Handles.Stacks.Updates is
                begin
                   Message.Send;
                end;
-            end if;
-
-            if Consume > Zero then
-               Stack.Remove (Resource, Consume);
             end if;
          end;
       end if;

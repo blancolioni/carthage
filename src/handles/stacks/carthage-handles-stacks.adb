@@ -144,6 +144,49 @@ package body Carthage.Handles.Stacks is
                    return Asset_Reference
    is (Get (This).Assets (Index));
 
+   ---------
+   -- Add --
+   ---------
+
+   overriding procedure Add
+     (This           : Stack_Handle;
+      Resource       : Carthage.Handles.Resources.Resource_Handle'Class;
+      Added_Quantity : Carthage.Quantities.Quantity_Type)
+   is
+   begin
+      for I in 1 .. This.Asset_Count loop
+         declare
+            Asset : constant Carthage.Handles.Assets.Asset_Handle :=
+                      Carthage.Handles.Assets.Get
+                        (This.Asset (I));
+         begin
+            if Asset.Resource_Cargo.Reference = Resource.Reference then
+               Asset.Add_Quantity (Added_Quantity);
+               return;
+            end if;
+         exception
+            when E : others =>
+               Asset.Log ("cannot update quantity: "
+                          & Ada.Exceptions.Exception_Message (E));
+         end;
+      end loop;
+
+      declare
+         Asset : constant Carthage.Handles.Assets.Asset_Handle :=
+                   Carthage.Handles.Assets.Create.New_Asset
+                     (Unit    => Carthage.Handles.Units.Cargo_Pod,
+                      Owner   => This.Owner,
+                      Stack   => This.Reference,
+                      XP      => Carthage.Handles.Assets.Green,
+                      Loyalty => Loyalty_Type'Last,
+                      Health  => Health_Type'Last);
+      begin
+         Asset.Set_Resource
+           (Carthage.Handles.Resources.Resource_Handle (Resource));
+         Asset.Add_Quantity (Added_Quantity);
+      end;
+   end Add;
+
    ---------------
    -- Add_Asset --
    ---------------
@@ -713,48 +756,6 @@ package body Carthage.Handles.Stacks is
       Stack_Vector.Update (This.Reference, Update'Access);
    end Set_Property;
 
-   ------------------
-   -- Set_Quantity --
-   ------------------
-
-   overriding procedure Set_Quantity
-     (This     : Stack_Handle;
-      Item     : Carthage.Handles.Resources.Resource_Handle;
-      Quantity : Carthage.Quantities.Quantity_Type)
-   is
-   begin
-      for I in 1 .. This.Asset_Count loop
-         declare
-            Asset : constant Carthage.Handles.Assets.Asset_Handle :=
-                      Carthage.Handles.Assets.Get
-                        (This.Asset (I));
-         begin
-            if Asset.Resource_Cargo.Reference = Item.Reference then
-               Asset.Set_Quantity (Quantity);
-               return;
-            end if;
-         exception
-            when E : others =>
-               Asset.Log ("cannot update quantity: "
-                          & Ada.Exceptions.Exception_Message (E));
-         end;
-      end loop;
-
-      declare
-         Asset : constant Carthage.Handles.Assets.Asset_Handle :=
-                   Carthage.Handles.Assets.Create.New_Asset
-                     (Unit    => Carthage.Handles.Units.Cargo_Pod,
-                      Owner   => This.Owner,
-                      Stack   => This.Reference,
-                      XP      => Carthage.Handles.Assets.Green,
-                      Loyalty => Loyalty_Type'Last,
-                      Health  => Health_Type'Last);
-      begin
-         Asset.Set_Resource (Item);
-         Asset.Add_Quantity (Quantity);
-      end;
-   end Set_Quantity;
-
    ----------
    -- Spot --
    ----------
@@ -807,6 +808,37 @@ package body Carthage.Handles.Stacks is
    begin
       Stack_Vector.Update (Stack.Reference, Update'Access);
    end Start_Next_Movement;
+
+   ----------
+   -- Take --
+   ----------
+
+   overriding procedure Take
+     (This     : Stack_Handle;
+      Resource : Carthage.Handles.Resources.Resource_Handle'Class;
+      Quantity : Carthage.Quantities.Quantity_Type;
+      Received : out Carthage.Quantities.Quantity_Type)
+   is
+   begin
+      for I in 1 .. This.Asset_Count loop
+         declare
+            Asset : constant Carthage.Handles.Assets.Asset_Handle :=
+                      Carthage.Handles.Assets.Get
+                        (This.Asset (I));
+         begin
+            if Asset.Resource_Cargo.Reference = Resource.Reference then
+               Asset.Remove_Quantity (Quantity, Received);
+               return;
+            end if;
+         exception
+            when E : others =>
+               Asset.Log ("cannot update quantity: "
+                          & Ada.Exceptions.Exception_Message (E));
+         end;
+      end loop;
+
+      Received := Carthage.Quantities.Zero;
+   end Take;
 
    -----------
    -- Total --

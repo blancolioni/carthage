@@ -200,7 +200,7 @@ package body Carthage.Handles.Structures is
             end if;
             Can_Proceed := False;
          else
-            Consumption.Set_Quantity (Resource, Need);
+            Consumption.Add (Resource, Need);
          end if;
       end Check;
 
