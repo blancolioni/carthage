@@ -26,24 +26,26 @@ package body Carthage.Handles.Houses.Configure is
    is
 
       Rec : constant House_Record := House_Record'
-        (Tag           => +Config.Config_Name,
-         Category      => House_Category'Value (Config.Get ("category")),
-         Capital       => Null_Planet_Reference,
-         Tax_Rate      => Real (Float'(Config.Get ("tax-rate", 0.1))),
-         Tithe_Skim    => Real (Float'(Config.Get ("tithe-skim", 0.1))),
-         Unit_Pay      => Real (Float'(Config.Get ("unit-pay", 0.75))),
-         Cash          =>
+        (Tag               => +Config.Config_Name,
+         Category          => House_Category'Value (Config.Get ("category")),
+         Capital           => Null_Planet_Reference,
+         Tax_Rate          => Real (Float'(Config.Get ("tax-rate", 0.1))),
+         Tithe_Skim        => Real (Float'(Config.Get ("tithe-skim", 0.1))),
+         Unit_Pay          => Real (Float'(Config.Get ("unit-pay", 0.75))),
+         Cash              =>
            Carthage.Money.To_Money
              (Real (Float'(Config.Get ("cash", 5_000.0)))),
-         Debt          =>
+         Debt              =>
            Carthage.Money.To_Money
              (Real (Float'(Config.Get ("debt", 0.0)))),
-         Color         => (if Config.Contains ("color")
-                           then Carthage.Import.Palette_Color
-                             (Config.Get ("color"))
-                           else (0.5, 0.5, 0.5, 1.0)),
-         Treaties      => (others => Neutral),
-         Known_Planets => <>);
+         Color             => (if Config.Contains ("color")
+                               then Carthage.Import.Palette_Color
+                                 (Config.Get ("color"))
+                               else (0.5, 0.5, 0.5, 1.0)),
+         Treaties          => (others => Neutral),
+         Known_Planets     => <>,
+         Current_Resources => <>,
+         Resource_History  => <>);
 
          House : constant House_Reference := Create (Rec);
 
